@@ -1,6 +1,7 @@
 package live.supeer.event;
 
 import co.aikar.commands.PaperCommandManager;
+import live.supeer.event.command.VoteCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
@@ -29,6 +30,10 @@ public final class Event extends JavaPlugin {
 
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.enableUnstableAPI("brigadier");
+
+        MinigameManager minigameManager = new MinigameManager();
+
+        manager.registerCommand(new VoteCommand(minigameManager));
     }
 
     @Override
