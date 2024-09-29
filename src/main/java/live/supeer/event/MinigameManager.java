@@ -32,14 +32,28 @@ public class MinigameManager {
         }
     }
 
+    public void stopGame() {
+        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
+            player.sendMessage("Thank you for playing!");
+        }
+    }
+
     void changeState(GameState newState) {
         if (currentState != null) currentState.stop();
         currentState = newState;
         currentState.start();
     }
 
-    public void startMinigame(Minigame minigame) {
+    public void prepareMinigame(Minigame minigame) {
         gameInProgress = true;
+        if (minigame.isLobbyEnabled()) {
+            changeState(new LobbyState(this, minigame));
+        } else {
+            startGameplay(minigame);
+        }
+    }
+
+    public void startGameplay(Minigame minigame) {
         changeState(new PlayingState(this, minigame));
     }
 
@@ -73,6 +87,12 @@ public class MinigameManager {
     public void teleportToMainGame() {
         for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
             player.teleport(new Location(player.getWorld(), 100, 100, 100));
+        }
+    }
+
+    public void teleportPlayers(Location location) {
+        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
+            player.teleport(location);
         }
     }
 

@@ -1,6 +1,7 @@
 package live.supeer.event;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,15 +15,22 @@ public class TestGame extends Minigame implements Listener {
     }
 
     @Override
-    public void startGame() {
-        registerListeners();
-        Bukkit.broadcastMessage("Starting TestGame...");
-        minigameManager.teleportToLobby();
+    public Location getLobbyLocation() {
+        return new Location(Bukkit.getWorld("world"), 100, 75, 89);
+    }
 
+    @Override
+    public void setLobbyEnabled(boolean lobbyEnabled) {
+        super.setLobbyEnabled(true);
+    }
+
+    @Override
+    public void startGame() {
         // Schedule teleport to main game area after 15 seconds
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             Bukkit.broadcastMessage("Teleporting to the game area...");
             minigameManager.teleportToMainGame();
+            registerListeners();
         }, 300L); // 15 seconds
     }
 

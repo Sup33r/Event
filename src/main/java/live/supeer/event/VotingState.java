@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,11 +23,10 @@ public class VotingState implements GameState {
 
     @Override
     public void start() {
-        Bukkit.broadcastMessage("Voting has started! You have 10 seconds to vote.");
+        Bukkit.broadcastMessage("Voting has started! You have 30 seconds to vote.");
         openVotingGUIForAllPlayers();
 
-        // End voting after 10 seconds
-        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 200L); // 10 seconds
+        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L);
     }
 
     @Override
@@ -48,8 +46,8 @@ public class VotingState implements GameState {
 
     private void endVoting() {
         Minigame selectedMinigame = getMinigameWithMostVotes();
-        Bukkit.broadcastMessage("The selected minigame is: " + selectedMinigame.getName());
-        minigameManager.startMinigame(selectedMinigame);
+        Bukkit.broadcastMessage("The selected minigame is: " + selectedMinigame.getName() + " with " + votes.get(selectedMinigame) + " votes.");
+        minigameManager.prepareMinigame(selectedMinigame);
     }
 
     public void castVote(Player player, Minigame minigame) {
@@ -61,7 +59,7 @@ public class VotingState implements GameState {
         return votes.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(minigameManager.getMinigames().getFirst()); // Default to first minigame if no votes
+                .orElse(minigameManager.getMinigames().getFirst());
     }
 
     private void openVotingGUIForAllPlayers() {

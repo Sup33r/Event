@@ -1,7 +1,7 @@
 package live.supeer.event;
 
 import co.aikar.commands.PaperCommandManager;
-import live.supeer.event.command.VoteCommand;
+import live.supeer.event.command.EventCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
@@ -36,7 +36,7 @@ public final class Event extends JavaPlugin {
 
         // Register commands
         PaperCommandManager manager = new PaperCommandManager(this);
-        manager.registerCommand(new VoteCommand(minigameManager));
+        manager.registerCommand(new EventCommand(minigameManager));
 
         // Register player join/leave listener
         getServer().getPluginManager().registerEvents(new PlayerJoinLeaveListener(minigameManager), this);
