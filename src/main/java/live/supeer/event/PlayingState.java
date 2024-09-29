@@ -14,11 +14,13 @@ public class PlayingState implements GameState {
     @Override
     public void start() {
         currentMinigame.startGame();
+        currentMinigame.registerListeners();
     }
 
     @Override
     public void stop() {
         currentMinigame.endGame();
+        currentMinigame.unregisterListeners();
     }
 
     @Override

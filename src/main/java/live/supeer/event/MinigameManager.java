@@ -1,7 +1,11 @@
 package live.supeer.event;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MinigameManager {
     private GameState currentState;
@@ -9,6 +13,7 @@ public class MinigameManager {
     private final VotingState votingState;
     private PlayingState playingState;
     private final EndingState endingState;
+    private boolean gameInProgress = false;
 
     public MinigameManager() {
         this.waitingState = new WaitingState(this);
@@ -28,16 +33,26 @@ public class MinigameManager {
     }
 
     public void startVoting() {
-        changeState(votingState);
+        if (!gameInProgress) {
+            changeState(votingState);
+        } else {
+            Bukkit.broadcastMessage("A game is already in progress. Please wait until it finishes.");
+        }
     }
 
     public void startMinigame(Minigame minigame) {
+        if (gameInProgress) {
+            Bukkit.broadcastMessage("A game is already in progress.");
+            return;
+        }
+        gameInProgress = true; // Set game in progress
         playingState = new PlayingState(this, minigame);
         changeState(playingState);
     }
 
     public void endGame() {
         changeState(endingState);
+        gameInProgress = false; // Reset the flag when the game ends
     }
 
     public Location getLobbyLocation() {
@@ -66,6 +81,13 @@ public class MinigameManager {
         for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
             player.teleport(new Location(player.getWorld(), 100, 100, 100));
         }
+    }
+
+    public List<Minigame> getMinigames() {
+        List<Minigame> minigames = new ArrayList<>();
+        minigames.add(new CoolGame(this));
+        minigames.add(new TestGame(this));
+        return minigames;
     }
 }
 

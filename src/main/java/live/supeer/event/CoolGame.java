@@ -6,19 +6,20 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class TestGame extends Minigame implements Listener {
+public class CoolGame extends Minigame implements Listener {
     private final MinigameManager minigameManager;
 
-    public TestGame(MinigameManager minigameManager) {
-        super("TestGame");
+    public CoolGame(MinigameManager minigameManager) {
+        super("CoolGame");
         this.minigameManager = minigameManager;
         Bukkit.getPluginManager().registerEvents(this, Event.getInstance());
     }
 
     @Override
     public void startGame() {
-        Bukkit.broadcastMessage("Teleporting all players to the TestGame lobby...");
+        Bukkit.broadcastMessage("Teleporting all players to the CoolGame lobby...");
         minigameManager.teleportToLobby();
+        registerListeners();
 
         // Schedule teleport to the main game after 15 seconds
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
@@ -30,6 +31,7 @@ public class TestGame extends Minigame implements Listener {
     @Override
     public void endGame() {
         Bukkit.broadcastMessage("Game has ended!");
+        unregisterListeners();
     }
 
     @Override
@@ -38,8 +40,8 @@ public class TestGame extends Minigame implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.DIAMOND_BLOCK) {
-            Bukkit.broadcastMessage(event.getPlayer().getName() + " touched the diamond block and won the game!");
+        if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.GOLD_BLOCK) {
+            Bukkit.broadcastMessage(event.getPlayer().getName() + " touched the gold block and won the game!");
 
             // Teleport all players back to the lobby after 10 seconds
             Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
@@ -52,4 +54,3 @@ public class TestGame extends Minigame implements Listener {
         }
     }
 }
-
