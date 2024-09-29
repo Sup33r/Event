@@ -12,10 +12,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.logging.Logger;
 
 public final class Event extends JavaPlugin {
-    private static Event plugin;
     public Logger logger = null;
     public static EventConfiguration configuration;
     private static LanguageManager languageManager;
+
+    private static Event plugin;
+    private static MinigameManager minigameManager;
 
     public static Event getInstance() {
         return plugin;
@@ -24,16 +26,20 @@ public final class Event extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        this.logger = getLogger();
+
+        // Initialize configuration and language manager
         configuration = new EventConfiguration(this);
         languageManager = new LanguageManager(this, "sv_se");
 
+        // Initialize MinigameManager
+        minigameManager = new MinigameManager();
+
+        // Register commands
         PaperCommandManager manager = new PaperCommandManager(this);
-        manager.enableUnstableAPI("brigadier");
-
-        MinigameManager minigameManager = new MinigameManager();
-
         manager.registerCommand(new VoteCommand(minigameManager));
+
+        // Register player join/leave listener
+        getServer().getPluginManager().registerEvents(new PlayerJoinLeaveListener(minigameManager), this);
     }
 
     @Override

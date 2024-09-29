@@ -24,11 +24,32 @@ public class VotingState implements GameState {
 
     @Override
     public void start() {
-        Bukkit.broadcastMessage("Voting has started! Choosing the game in 10 seconds...");
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            openGui(player);
-        }
-        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 200L); // 10 seconds delay (200 ticks)
+        Bukkit.broadcastMessage("Voting has started! You have 10 seconds to vote.");
+        openVotingGUIForAllPlayers();
+
+        // End voting after 10 seconds
+        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 200L); // 10 seconds
+    }
+
+    @Override
+    public void stop() {
+        votes.clear();
+    }
+
+    @Override
+    public void handlePlayerJoin(Player player) {
+        openGui(player);
+    }
+
+    @Override
+    public void handlePlayerLeave(Player player) {
+        // Handle player leaving during voting
+    }
+
+    private void endVoting() {
+        Minigame selectedMinigame = getMinigameWithMostVotes();
+        Bukkit.broadcastMessage("The selected minigame is: " + selectedMinigame.getName());
+        minigameManager.startMinigame(selectedMinigame);
     }
 
     public void castVote(Player player, Minigame minigame) {
@@ -36,34 +57,17 @@ public class VotingState implements GameState {
         player.sendMessage("You voted for " + minigame.getName());
     }
 
-    public void endVoting() {
-        Minigame minigame = votes.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(Map.Entry::getKey).orElse(null);
-        if (minigame == null) {
-            Bukkit.broadcastMessage("No votes were cast. Choosing a random minigame...");
-            minigame = minigameManager.getMinigames().get((int) (Math.random() * minigameManager.getMinigames().size()));
+    private Minigame getMinigameWithMostVotes() {
+        return votes.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(minigameManager.getMinigames().getFirst()); // Default to first minigame if no votes
+    }
+
+    private void openVotingGUIForAllPlayers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            openGui(player);
         }
-        Bukkit.broadcastMessage("The minigame " + minigame.getName() + " has been chosen!");
-        minigameManager.startMinigame(minigame);
-    }
-
-    @Override
-    public void stop() {
-        // Clean up vote data if needed
-    }
-
-    @Override
-    public void reset() {
-        votes.clear();
-    }
-
-    @Override
-    public void handlePlayerJoin(Player player) {
-        player.sendMessage("Voting is in progress. Use /vote <minigame> to participate!");
-    }
-
-    @Override
-    public void handlePlayerLeave(Player player) {
-        // Handle if players leave during voting
     }
 
     public void openGui(Player player) {

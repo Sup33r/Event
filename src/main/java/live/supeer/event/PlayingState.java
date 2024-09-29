@@ -14,28 +14,21 @@ public class PlayingState implements GameState {
     @Override
     public void start() {
         currentMinigame.startGame();
-        currentMinigame.registerListeners();
     }
 
     @Override
     public void stop() {
         currentMinigame.endGame();
-        currentMinigame.unregisterListeners();
-    }
-
-    @Override
-    public void reset() {
-        currentMinigame.resetGame();
     }
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.sendMessage("A game is currently in progress, you cannot join right now.");
+        player.sendMessage("The game has already started!");
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        currentMinigame.handlePlayerLeave(player);
+        // Handle player leaving during game
     }
 }
 

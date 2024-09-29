@@ -2,12 +2,13 @@ package live.supeer.event.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.Default;
 import live.supeer.event.Event;
 import live.supeer.event.MinigameManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@CommandAlias("startevent")
+@CommandAlias("startvote")
 public class VoteCommand extends BaseCommand {
     private final MinigameManager minigameManager;
 
@@ -15,7 +16,7 @@ public class VoteCommand extends BaseCommand {
         this.minigameManager = minigameManager;
     }
 
-    @CommandAlias("startvote")
+    @Default
     public void onStartVote(CommandSender sender) {
         sender.sendMessage("Starting the voting process...");
         minigameManager.startVoting();

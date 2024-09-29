@@ -1,5 +1,6 @@
 package live.supeer.event;
 
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -9,50 +10,42 @@ import java.util.List;
 
 public class MinigameManager {
     private GameState currentState;
-    private final WaitingState waitingState;
-    private final VotingState votingState;
-    private PlayingState playingState;
-    private final EndingState endingState;
     private boolean gameInProgress = false;
+    @Getter
+    private final List<Minigame> minigames = new ArrayList<>();
 
     public MinigameManager() {
-        this.waitingState = new WaitingState(this);
-        this.votingState = new VotingState(this);
-        this.playingState = null; // Will be set when a minigame starts
-        this.endingState = new EndingState(this);
-
-        currentState = waitingState; // Initial state
+        loadMinigames();
+        currentState = new WaitingState(this);
     }
 
-    public void changeState(GameState newState) {
-        if (currentState != null) {
-            currentState.stop();
-        }
-        currentState = newState;
-        currentState.start();
+    private void loadMinigames() {
+        minigames.add(new TestGame(this));
+        minigames.add(new CoolGame(this));
     }
 
     public void startVoting() {
         if (!gameInProgress) {
-            changeState(votingState);
+            changeState(new VotingState(this));
         } else {
-            Bukkit.broadcastMessage("A game is already in progress. Please wait until it finishes.");
+            Bukkit.broadcastMessage("A game is already in progress. Please wait.");
         }
+    }
+
+    void changeState(GameState newState) {
+        if (currentState != null) currentState.stop();
+        currentState = newState;
+        currentState.start();
     }
 
     public void startMinigame(Minigame minigame) {
-        if (gameInProgress) {
-            Bukkit.broadcastMessage("A game is already in progress.");
-            return;
-        }
-        gameInProgress = true; // Set game in progress
-        playingState = new PlayingState(this, minigame);
-        changeState(playingState);
+        gameInProgress = true;
+        changeState(new PlayingState(this, minigame));
     }
 
     public void endGame() {
-        changeState(endingState);
-        gameInProgress = false; // Reset the flag when the game ends
+        gameInProgress = false;
+        changeState(new EndingState(this));
     }
 
     public Location getLobbyLocation() {
@@ -60,7 +53,7 @@ public class MinigameManager {
     }
 
     public void resetToLobby() {
-        changeState(waitingState);
+        changeState(new WaitingState(this));
     }
 
     public void handlePlayerJoin(Player player) {
@@ -83,11 +76,5 @@ public class MinigameManager {
         }
     }
 
-    public List<Minigame> getMinigames() {
-        List<Minigame> minigames = new ArrayList<>();
-        minigames.add(new CoolGame(this));
-        minigames.add(new TestGame(this));
-        return minigames;
-    }
 }
 

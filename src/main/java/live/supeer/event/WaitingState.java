@@ -1,5 +1,6 @@
 package live.supeer.event;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class WaitingState implements GameState {
@@ -11,28 +12,22 @@ public class WaitingState implements GameState {
 
     @Override
     public void start() {
-        minigameManager.startVoting();
+        // Optionally, start the voting process automatically after a delay
     }
 
     @Override
     public void stop() {
-        // Clean up if needed
-    }
-
-    @Override
-    public void reset() {
-        // Reset the state, for example, clear votes or prepare the lobby
+        // Cleanup if necessary
     }
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.teleport(minigameManager.getLobbyLocation());
-        player.sendMessage("Welcome to the lobby! Please wait for the next game.");
+        player.sendMessage("You have joined the event!");
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving during the waiting state
+        player.sendMessage("You have left the event!");
     }
 }
 

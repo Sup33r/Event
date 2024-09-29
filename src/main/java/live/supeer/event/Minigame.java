@@ -9,15 +9,15 @@ import org.bukkit.event.Listener;
 public abstract class Minigame implements Listener {
     @Getter
     protected String name;
-    protected GameState gameState;
+    protected final MinigameManager minigameManager;
 
-    public Minigame(String name) {
+    public Minigame(String name, MinigameManager minigameManager) {
         this.name = name;
+        this.minigameManager = minigameManager;
     }
 
     public abstract void startGame();
     public abstract void endGame();
-    public abstract void resetGame();
 
     public void registerListeners() {
         Bukkit.getPluginManager().registerEvents(this, Event.getInstance());
@@ -25,9 +25,5 @@ public abstract class Minigame implements Listener {
 
     public void unregisterListeners() {
         HandlerList.unregisterAll(this);
-    }
-
-    public void handlePlayerLeave(Player player) {
-        gameState.handlePlayerLeave(player);
     }
 }

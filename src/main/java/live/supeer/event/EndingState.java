@@ -12,13 +12,13 @@ public class EndingState implements GameState {
 
     @Override
     public void start() {
-        // Teleport all players back to the lobby
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.teleport(minigameManager.getLobbyLocation());
-            player.sendMessage("Game over! Returning to the lobby...");
-        }
-        // Reset minigame state and prepare for the next game
-        minigameManager.resetToLobby();
+        Bukkit.broadcastMessage("Game over! Returning to lobby...");
+        minigameManager.teleportToLobby();
+
+        // After returning to lobby, reset to waiting state
+        Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
+            minigameManager.changeState(new WaitingState(minigameManager));
+        }, 100L); // 5 seconds
     }
 
     @Override
@@ -27,18 +27,13 @@ public class EndingState implements GameState {
     }
 
     @Override
-    public void reset() {
-        // Reset relevant data if needed
-    }
-
-    @Override
     public void handlePlayerJoin(Player player) {
-        // Handle players who join while in the ending phase
+        player.sendMessage("The game has ended!");
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle players leaving while in the ending phase
+        // Handle player leaving after game has ended
     }
 }
 
