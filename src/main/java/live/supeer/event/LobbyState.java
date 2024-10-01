@@ -14,10 +14,11 @@ public class LobbyState implements GameState {
 
     @Override
     public void start() {
-        minigameManager.teleportPlayers(minigame.getLobbyLocation());
+        Bukkit.broadcastMessage("Game will start soon! Get ready.");
+        teleportPlayersToLobby();
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             minigameManager.startGameplay(minigame);
-        }, 300L); // 15 seconds delay
+        }, 200L); // 10 seconds
     }
 
     @Override
@@ -27,11 +28,18 @@ public class LobbyState implements GameState {
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.sendMessage("You have joined the lobby for " + minigame.getName() + "!");
+        player.sendMessage("Game is about to start! Teleporting you to the lobby.");
+        player.teleport(minigame.getLobbyLocation());
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        player.sendMessage("You have left the lobby for " + minigame.getName() + "!");
+        // Handle player leaving during lobby state
+    }
+
+    private void teleportPlayersToLobby() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.teleport(minigame.getLobbyLocation());
+        }
     }
 }

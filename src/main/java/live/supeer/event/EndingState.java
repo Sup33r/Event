@@ -1,6 +1,7 @@
 package live.supeer.event;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 public class EndingState implements GameState {
@@ -13,27 +14,37 @@ public class EndingState implements GameState {
     @Override
     public void start() {
         Bukkit.broadcastMessage("Game over! Returning to lobby...");
-        minigameManager.teleportToLobby();
+        teleportPlayersToLobby();
 
-        // After returning to lobby, reset to waiting state
+        // Reset game and return to waiting state after a delay
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             minigameManager.changeState(new WaitingState(minigameManager));
-        }, 100L); // 5 seconds
+        }, 100L); // Delay in ticks
     }
 
     @Override
     public void stop() {
-        // Clean up if needed
+        // Cleanup if necessary
     }
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.sendMessage("The game has ended!");
+        player.sendMessage("Game has just ended. Returning you to the lobby.");
+        player.teleport(Event.configuration.getLobbyLocation());
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving after game has ended
+        // Handle player leaving during ending state
+    }
+
+    private void teleportPlayersToLobby() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.teleport(Event.configuration.getLobbyLocation());
+            //TODO: Set the players gamemode to Survival, but use a custom implementation
+            player.setGameMode(GameMode.ADVENTURE);
+        }
     }
 }
+
 

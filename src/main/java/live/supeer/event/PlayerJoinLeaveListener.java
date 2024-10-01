@@ -14,12 +14,12 @@ public class PlayerJoinLeaveListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        minigameManager.handlePlayerJoin(event.getPlayer());
+        minigameManager.getCurrentState().handlePlayerJoin(event.getPlayer());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        minigameManager.handlePlayerLeave(event.getPlayer());
+        minigameManager.getCurrentState().handlePlayerLeave(event.getPlayer());
     }
 }
 

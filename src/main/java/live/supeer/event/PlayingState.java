@@ -1,29 +1,34 @@
 package live.supeer.event;
 
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 public class PlayingState implements GameState {
     private final MinigameManager minigameManager;
-    private final Minigame currentMinigame;
+    private final Minigame minigame;
 
-    public PlayingState(MinigameManager minigameManager, Minigame currentMinigame) {
+    public PlayingState(MinigameManager minigameManager, Minigame minigame) {
         this.minigameManager = minigameManager;
-        this.currentMinigame = currentMinigame;
+        this.minigame = minigame;
     }
 
     @Override
     public void start() {
-        currentMinigame.startGame();
+        minigame.startGame();
     }
 
     @Override
     public void stop() {
-        currentMinigame.endGame();
+        minigame.endGame();
     }
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.sendMessage("The game has already started!");
+        player.sendMessage("A game is currently in progress. You will spectate.");
+        // Add player to spectator mode
+        //TODO: Dont use Spectator mode, but instead a custom implementation
+        player.setGameMode(GameMode.SPECTATOR);
+        player.teleport(minigame.getLobbyLocation()); // Or appropriate location
     }
 
     @Override
@@ -31,4 +36,5 @@ public class PlayingState implements GameState {
         // Handle player leaving during game
     }
 }
+
 

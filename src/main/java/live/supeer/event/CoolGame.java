@@ -8,6 +8,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class CoolGame extends Minigame implements Listener {
 
     public CoolGame(MinigameManager minigameManager) {
@@ -15,42 +18,39 @@ public class CoolGame extends Minigame implements Listener {
     }
 
     @Override
-    public Location getLobbyLocation() {
-        return new Location(Bukkit.getWorld("world"), 100, 75, 93);
+    public List<GameMap> getAvailableMaps() {
+        return Arrays.asList(
+                new GameMap("testmap1", null, null),
+                new GameMap("testmap2", null, null)
+        );
     }
 
     @Override
-    public void setLobbyEnabled(boolean lobbyEnabled) {
-        super.setLobbyEnabled(true);
+    public Location getLobbyLocation() {
+        return new Location(gameWorld, 0, 100, 0); // Adjust coordinates accordingly
     }
 
     @Override
     public void startGame() {
-
-        // Schedule teleport to main game area after 15 seconds
-        Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
-            Bukkit.broadcastMessage("Teleporting to the game area...");
-            minigameManager.teleportToMainGame();
-            registerListeners();
-        }, 300L); // 15 seconds
+        registerListeners();
+        // Game logic here
+        Bukkit.broadcastMessage("CoolGame has started!");
     }
 
     @Override
     public void endGame() {
-        Bukkit.broadcastMessage("CoolGame has ended.");
+        unregisterListeners();
+        Bukkit.broadcastMessage("CoolGame has ended!");
+        minigameManager.endGame();
     }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        // Implement game logic, e.g., check for block interaction
         if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.GOLD_BLOCK) {
             Player winner = event.getPlayer();
             Bukkit.broadcastMessage(winner.getName() + " has won the CoolGame!");
-            unregisterListeners();
-
-            // End the game after 10 seconds
-            Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
-                minigameManager.endGame();
-            }, 200L); // 10 seconds
+            endGame();
         }
     }
 }

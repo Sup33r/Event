@@ -2,6 +2,7 @@ package live.supeer.event;
 
 import co.aikar.commands.PaperCommandManager;
 import live.supeer.event.command.EventCommand;
+import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
@@ -12,33 +13,27 @@ import org.jetbrains.annotations.NotNull;
 import java.util.logging.Logger;
 
 public final class Event extends JavaPlugin {
-    public Logger logger = null;
+    @Getter
+    private static Event instance;
     public static EventConfiguration configuration;
+    public Logger logger = null;
     private static LanguageManager languageManager;
 
-    private static Event plugin;
-    private static MinigameManager minigameManager;
-
-    public static Event getInstance() {
-        return plugin;
-    }
+    private MinigameManager minigameManager;
 
     @Override
     public void onEnable() {
-        plugin = this;
-
-        // Initialize configuration and language manager
+        instance = this;
         configuration = new EventConfiguration(this);
-        languageManager = new LanguageManager(this, "sv_se");
-
-        // Initialize MinigameManager
         minigameManager = new MinigameManager();
+        logger = getLogger();
+        languageManager = new LanguageManager(this, "sv_se");
 
         // Register commands
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new EventCommand(minigameManager));
 
-        // Register player join/leave listener
+        // Register player event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinLeaveListener(minigameManager), this);
     }
 

@@ -12,7 +12,7 @@ public class WaitingState implements GameState {
 
     @Override
     public void start() {
-        // Optionally, start the voting process automatically after a delay
+        Bukkit.broadcastMessage("Waiting for players...");
     }
 
     @Override
@@ -22,12 +22,14 @@ public class WaitingState implements GameState {
 
     @Override
     public void handlePlayerJoin(Player player) {
-        player.sendMessage("You have joined the event!");
+        player.sendMessage("Welcome! Waiting for the next game.");
+        player.teleport(Event.configuration.getLobbyLocation());
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        player.sendMessage("You have left the event!");
+        // Handle player leaving during waiting state
     }
 }
+
 

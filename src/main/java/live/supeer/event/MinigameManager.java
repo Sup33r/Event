@@ -9,19 +9,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MinigameManager {
+    @Getter
     private GameState currentState;
     private boolean gameInProgress = false;
+    @Getter
+    private final MapManager mapManager;
     @Getter
     private final List<Minigame> minigames = new ArrayList<>();
 
     public MinigameManager() {
+        this.mapManager = new MapManager();
         loadMinigames();
         currentState = new WaitingState(this);
+        currentState.start();
     }
 
     private void loadMinigames() {
         minigames.add(new TestGame(this));
         minigames.add(new CoolGame(this));
+        minigames.add(new TNTGame(this));
     }
 
     public void startVoting() {
@@ -32,25 +38,10 @@ public class MinigameManager {
         }
     }
 
-    public void stopGame() {
-        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
-            player.sendMessage("Thank you for playing!");
-        }
-    }
-
-    void changeState(GameState newState) {
-        if (currentState != null) currentState.stop();
-        currentState = newState;
-        currentState.start();
-    }
-
     public void prepareMinigame(Minigame minigame) {
         gameInProgress = true;
-        if (minigame.isLobbyEnabled()) {
-            changeState(new LobbyState(this, minigame));
-        } else {
-            startGameplay(minigame);
-        }
+        minigame.prepareGame();
+        changeState(new LobbyState(this, minigame));
     }
 
     public void startGameplay(Minigame minigame) {
@@ -58,43 +49,17 @@ public class MinigameManager {
     }
 
     public void endGame() {
-        gameInProgress = false;
         changeState(new EndingState(this));
+        gameInProgress = false;
     }
 
-    public Location getLobbyLocation() {
-        return Event.configuration.getLobbyLocation();
-    }
-
-    public void resetToLobby() {
-        changeState(new WaitingState(this));
-    }
-
-    public void handlePlayerJoin(Player player) {
-        currentState.handlePlayerJoin(player);
-    }
-
-    public void handlePlayerLeave(Player player) {
-        currentState.handlePlayerLeave(player);
-    }
-
-    public void teleportToLobby() {
-        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
-            player.teleport(getLobbyLocation());
+    public void changeState(GameState newState) {
+        if (currentState != null) {
+            currentState.stop();
         }
+        currentState = newState;
+        currentState.start();
     }
 
-    public void teleportToMainGame() {
-        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
-            player.teleport(new Location(player.getWorld(), 100, 100, 100));
-        }
-    }
-
-    public void teleportPlayers(Location location) {
-        for (Player player : Event.getInstance().getServer().getOnlinePlayers()) {
-            player.teleport(location);
-        }
-    }
-
+    // Additional methods for handling player events
 }
-

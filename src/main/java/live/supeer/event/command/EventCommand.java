@@ -25,7 +25,7 @@ public class EventCommand extends BaseCommand {
     @Subcommand("stop")
     public void onStop(CommandSender sender) {
         sender.sendMessage("Stopping the game...");
-        minigameManager.stopGame();
+        minigameManager.endGame();
     }
 
     @Subcommand("set")

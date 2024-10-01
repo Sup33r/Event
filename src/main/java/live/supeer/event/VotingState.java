@@ -23,10 +23,11 @@ public class VotingState implements GameState {
 
     @Override
     public void start() {
-        Bukkit.broadcastMessage("Voting has started! You have 30 seconds to vote.");
+        Bukkit.broadcastMessage("Voting has started! Please vote for the next minigame.");
         openVotingGUIForAllPlayers();
 
-        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L);
+        // End voting after a set time
+        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L); // 30 seconds
     }
 
     @Override
@@ -36,39 +37,34 @@ public class VotingState implements GameState {
 
     @Override
     public void handlePlayerJoin(Player player) {
-        openGui(player);
+        openVotingGUI(player);
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving during voting
+        // Remove player's vote if necessary
     }
 
     private void endVoting() {
         Minigame selectedMinigame = getMinigameWithMostVotes();
-        Bukkit.broadcastMessage("The selected minigame is: " + selectedMinigame.getName() + " with " + votes.get(selectedMinigame) + " votes.");
+        Bukkit.broadcastMessage("The selected minigame is: " + selectedMinigame.getName());
         minigameManager.prepareMinigame(selectedMinigame);
-    }
-
-    public void castVote(Player player, Minigame minigame) {
-        votes.put(minigame, votes.getOrDefault(minigame, 0) + 1);
-        player.sendMessage("You voted for " + minigame.getName());
     }
 
     private Minigame getMinigameWithMostVotes() {
         return votes.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(minigameManager.getMinigames().getFirst());
+                .orElse(minigameManager.getMinigames().getFirst()); // Default to first minigame
     }
 
     private void openVotingGUIForAllPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            openGui(player);
+            openVotingGUI(player);
         }
     }
 
-    public void openGui(Player player) {
+    private void openVotingGUI(Player player) {
         ChestGui gui = new ChestGui(1, "Vote for a minigame");
         StaticPane pane = new StaticPane(0,0,9,1);
         int index = 0;
@@ -88,5 +84,11 @@ public class VotingState implements GameState {
         gui.setOnGlobalClick(event -> event.setCancelled(true));
         gui.show(player);
     }
+
+    public void castVote(Player player, Minigame minigame) {
+        votes.put(minigame, votes.getOrDefault(minigame, 0) + 1);
+        player.sendMessage("You voted for " + minigame.getName());
+    }
 }
+
 
