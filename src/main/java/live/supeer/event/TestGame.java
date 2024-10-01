@@ -13,6 +13,8 @@ import java.util.List;
 
 public class TestGame extends Minigame implements Listener {
 
+    private boolean gameEnded = false;
+
     public TestGame(MinigameManager minigameManager) {
         super("TestGame", minigameManager);
     }
@@ -32,6 +34,7 @@ public class TestGame extends Minigame implements Listener {
 
     @Override
     public void startGame() {
+        gameEnded = false;
         registerListeners();
         // Game logic here
         Bukkit.broadcastMessage("TestGame has started!");
@@ -39,6 +42,8 @@ public class TestGame extends Minigame implements Listener {
 
     @Override
     public void endGame() {
+        if (gameEnded) return;
+        gameEnded = true;
         unregisterListeners();
         Bukkit.broadcastMessage("TestGame has ended!");
         minigameManager.endGame();

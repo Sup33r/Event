@@ -1,7 +1,6 @@
 package live.supeer.event;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -17,6 +16,8 @@ public abstract class Minigame implements Listener {
     protected final MinigameManager minigameManager;
     protected GameMap currentMap;
     protected World gameWorld;
+
+    private boolean listenersRegistered = false;
 
     public Minigame(String name, MinigameManager minigameManager) {
         this.name = name;
@@ -48,12 +49,17 @@ public abstract class Minigame implements Listener {
     // End the game logic
     public abstract void endGame();
 
-    // Register and unregister event listeners
     public void registerListeners() {
-        Bukkit.getPluginManager().registerEvents(this, Event.getInstance());
+        if (!listenersRegistered) {
+            Bukkit.getPluginManager().registerEvents(this, Event.getInstance());
+            listenersRegistered = true;
+        }
     }
 
     public void unregisterListeners() {
-        HandlerList.unregisterAll(this);
+        if (listenersRegistered) {
+            HandlerList.unregisterAll(this);
+            listenersRegistered = false;
+        }
     }
 }
