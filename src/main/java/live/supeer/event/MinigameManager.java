@@ -1,6 +1,7 @@
 package live.supeer.event;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,6 +17,13 @@ public class MinigameManager {
     private final MapManager mapManager;
     @Getter
     private final List<Minigame> minigames = new ArrayList<>();
+
+    @Getter
+    @Setter
+    protected List<Player> activePlayers;
+
+    @Getter
+    protected List<EventPlayer> onlinePlayers;
 
     public MinigameManager() {
         this.mapManager = new MapManager();

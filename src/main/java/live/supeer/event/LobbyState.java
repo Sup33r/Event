@@ -16,6 +16,7 @@ public class LobbyState implements GameState {
     public void start() {
         Bukkit.broadcastMessage("Game will start soon! Get ready.");
         teleportPlayersToLobby();
+        announceNonActive();
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             minigameManager.startGameplay(minigame);
         }, 200L); // 10 seconds
@@ -40,6 +41,14 @@ public class LobbyState implements GameState {
     private void teleportPlayersToLobby() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.teleport(minigame.getLobbyLocation());
+        }
+    }
+
+    private void announceNonActive() {
+        for (EventPlayer eventPlayer : minigameManager.onlinePlayers) {
+            if (!eventPlayer.isActive()) {
+                eventPlayer.getPlayer().sendMessage("You are not active in the event. Change your settings to enable participation.");
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package live.supeer.event;
 
 import co.aikar.commands.PaperCommandManager;
+import co.aikar.idb.DB;
 import live.supeer.event.command.EventCommand;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -19,27 +20,25 @@ public final class Event extends JavaPlugin {
     public Logger logger = null;
     private static LanguageManager languageManager;
 
-    private MinigameManager minigameManager;
-
     @Override
     public void onEnable() {
         instance = this;
         configuration = new EventConfiguration(this);
-        minigameManager = new MinigameManager();
+        MinigameManager minigameManager = new MinigameManager();
         logger = getLogger();
         languageManager = new LanguageManager(this, "sv_se");
 
-        // Register commands
+        Database.initialize();
+
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new EventCommand(minigameManager));
 
-        // Register player event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinLeaveListener(minigameManager), this);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        DB.close();
     }
 
     public static void sendMessage(@NotNull CommandSender sender, @NotNull String key, String... replacements) {

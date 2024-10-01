@@ -25,7 +25,6 @@ public class VotingState implements GameState {
     public void start() {
         Bukkit.broadcastMessage("Voting has started! Please vote for the next minigame.");
         openVotingGUIForAllPlayers();
-
         // End voting after a set time
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L); // 30 seconds
     }

@@ -28,11 +28,11 @@ public class Database {
         try {
             DB.executeUpdate(
                     """
-                              CREATE TABLE IF NOT EXISTS `placeholder` (
-                                `plotId` int(11) NOT NULL,
-                                `playerUUID` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-                                `count` bigint(30) DEFAULT NULL,
-                                 PRIMARY KEY (plotId,playerUUID)
+                              CREATE TABLE IF NOT EXISTS `players` (
+                                `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                `points` bigint(30) DEFAULT '0',
+                                `active` tinyint(1) DEFAULT '0',
+                                 PRIMARY KEY (uuid)
                               ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""");
         } catch (SQLException exception) {
             exception.printStackTrace();
