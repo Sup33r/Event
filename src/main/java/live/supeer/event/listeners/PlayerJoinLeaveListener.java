@@ -1,7 +1,9 @@
-package live.supeer.event;
+package live.supeer.event.listeners;
 
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
+import live.supeer.event.EventPlayer;
+import live.supeer.event.managers.MinigameManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,9 +41,9 @@ public class PlayerJoinLeaveListener implements Listener {
                 row = DB.getFirstRow("SELECT * FROM `players` WHERE `uuid` = ?", player.getUniqueId().toString());
             }
             EventPlayer eventPlayer = new EventPlayer(row);
-            minigameManager.onlinePlayers.add(eventPlayer);
+            minigameManager.getOnlinePlayers().add(eventPlayer);
             if (eventPlayer.isActive()) {
-                minigameManager.activePlayers.add(player);
+                minigameManager.getActivePlayers().add(player);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

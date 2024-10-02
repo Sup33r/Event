@@ -1,5 +1,7 @@
-package live.supeer.event;
+package live.supeer.event.states;
 
+import live.supeer.event.*;
+import live.supeer.event.managers.MinigameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -45,7 +47,7 @@ public class LobbyState implements GameState {
     }
 
     private void announceNonActive() {
-        for (EventPlayer eventPlayer : minigameManager.onlinePlayers) {
+        for (EventPlayer eventPlayer : minigameManager.getOnlinePlayers()) {
             if (!eventPlayer.isActive()) {
                 eventPlayer.getPlayer().sendMessage("You are not active in the event. Change your settings to enable participation.");
             }

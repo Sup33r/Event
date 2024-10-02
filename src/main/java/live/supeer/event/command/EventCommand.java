@@ -9,8 +9,7 @@ import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.component.ToggleButton;
 import live.supeer.event.Event;
 import live.supeer.event.EventPlayer;
-import live.supeer.event.Minigame;
-import live.supeer.event.MinigameManager;
+import live.supeer.event.managers.MinigameManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -55,7 +54,7 @@ public class EventCommand extends BaseCommand {
 
     private void showSettingsGui(Player player) {
         ChestGui gui = new ChestGui(2, "Settings");
-        StaticPane pane = new StaticPane(0, 0, 1, 1);
+        StaticPane pane = new StaticPane(0, 0, 9, 2); // Adjusted dimensions to cover the entire GUI
 
         // Get the EventPlayer instance for the player
         EventPlayer eventPlayer = minigameManager.getOnlinePlayers().stream()
@@ -73,7 +72,7 @@ public class EventCommand extends BaseCommand {
         ItemMeta stateMeta = stateItem.getItemMeta();
         stateMeta.displayName(Component.text("Active State: " + (eventPlayer.isActive() ? "Active" : "Inactive")));
         stateItem.setItemMeta(stateMeta);
-        pane.addItem(new GuiItem(stateItem), 4, 0);
+        pane.addItem(new GuiItem(stateItem), 4, 0); // Position within the adjusted pane dimensions
 
         // Toggle button to switch the active state
         ToggleButton toggleButton = new ToggleButton(4, 1, 1, 1);

@@ -1,9 +1,14 @@
-package live.supeer.event;
+package live.supeer.event.managers;
 
+import live.supeer.event.EventPlayer;
+import live.supeer.event.Minigame;
+import live.supeer.event.games.CoolGame;
+import live.supeer.event.games.TNTGame;
+import live.supeer.event.games.TestGame;
+import live.supeer.event.states.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -20,10 +25,10 @@ public class MinigameManager {
 
     @Getter
     @Setter
-    protected List<Player> activePlayers;
+    protected List<Player> activePlayers = new ArrayList<>();
 
     @Getter
-    protected List<EventPlayer> onlinePlayers;
+    protected List<EventPlayer> onlinePlayers = new ArrayList<>();
 
     public MinigameManager() {
         this.mapManager = new MapManager();

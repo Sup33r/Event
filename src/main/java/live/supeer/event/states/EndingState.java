@@ -1,5 +1,7 @@
-package live.supeer.event;
+package live.supeer.event.states;
 
+import live.supeer.event.Event;
+import live.supeer.event.managers.MinigameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;

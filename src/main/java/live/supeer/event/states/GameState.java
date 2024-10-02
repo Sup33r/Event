@@ -1,4 +1,4 @@
-package live.supeer.event;
+package live.supeer.event.states;
 
 import org.bukkit.entity.Player;
 

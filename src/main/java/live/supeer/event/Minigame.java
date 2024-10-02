@@ -1,8 +1,10 @@
 package live.supeer.event;
 
+import live.supeer.event.managers.MinigameManager;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -16,11 +18,14 @@ public abstract class Minigame implements Listener {
     protected final MinigameManager minigameManager;
     protected GameMap currentMap;
     protected World gameWorld;
+    @Getter
+    protected Material guiMaterial;
 
     private boolean listenersRegistered = false;
 
-    public Minigame(String name, MinigameManager minigameManager) {
+    public Minigame(String name, Material guiMaterial, MinigameManager minigameManager) {
         this.name = name;
+        this.guiMaterial = guiMaterial;
         this.minigameManager = minigameManager;
     }
 

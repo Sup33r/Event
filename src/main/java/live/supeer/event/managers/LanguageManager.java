@@ -1,5 +1,6 @@
-package live.supeer.event;
+package live.supeer.event.managers;
 
+import live.supeer.event.Event;
 import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.YamlConfiguration;

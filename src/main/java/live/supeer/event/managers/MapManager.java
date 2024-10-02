@@ -1,5 +1,6 @@
-package live.supeer.event;
+package live.supeer.event.managers;
 
+import live.supeer.event.GameMap;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;

@@ -1,9 +1,13 @@
-package live.supeer.event;
+package live.supeer.event.states;
 
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import live.supeer.event.Event;
+import live.supeer.event.Minigame;
+import live.supeer.event.managers.MinigameManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -68,9 +72,9 @@ public class VotingState implements GameState {
         StaticPane pane = new StaticPane(0,0,9,1);
         int index = 0;
         for (Minigame minigame : minigameManager.getMinigames()) {
-            ItemStack item = new ItemStack(Material.PINK_DYE);
+            ItemStack item = new ItemStack(minigame.getGuiMaterial());
             ItemMeta meta = item.getItemMeta();
-            meta.displayName(Component.text(minigame.getName()));
+            meta.displayName(Component.text(minigame.getName()).color(NamedTextColor.YELLOW));
             item.setItemMeta(meta);
             GuiItem guiItem = new GuiItem(item, event -> {
                 castVote(player, minigame);
