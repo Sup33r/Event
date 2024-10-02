@@ -18,13 +18,13 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class TNTGame extends Minigame implements Listener {
 
-    private final List<Player> players = minigameManager.getActivePlayers();
-
+    private List<Player> players = new ArrayList<>(minigameManager.getActivePlayers());
     private boolean gameEnded = false;
 
     private boolean gameStarted = false;
@@ -49,9 +49,10 @@ public class TNTGame extends Minigame implements Listener {
     @Override
     public void startGame() {
         resetPlayers();
-        players.clear();
-        players.addAll(minigameManager.getActivePlayers());
+        players = new ArrayList<>(minigameManager.getActivePlayers());
+        gameStarted = false;
         gameEnded = false;
+        Bukkit.broadcastMessage(minigameManager.getActivePlayers().stream().map(Player::getName).reduce("Players: ", (a, b) -> a + ", " + b));
         Bukkit.broadcastMessage(currentMap.getWorldName());
         Bukkit.broadcastMessage(currentMap.getElimHeight().toString());
         Bukkit.broadcastMessage(currentMap.getTriggerBlock().toString());
@@ -74,19 +75,29 @@ public class TNTGame extends Minigame implements Listener {
     public void spreadPlayers() {
         for (Player player : players) {
             Location location;
+            int attempts = 0;
             do {
+                attempts++;
                 // Get a random location within 16 blocks of -4, 32, 0
                 location = new Location(gameWorld, -4 + (Math.random() * 32 - 16), 100, 32 + (Math.random() * 32 - 16));
                 // Get the highest block at the location
                 location = gameWorld.getHighestBlockAt(location).getLocation();
-            } while (location.getBlockY() == 0 || location.getBlock().getType() != currentMap.getTriggerBlock()); // Ensure the block is the trigger block
+                Bukkit.broadcastMessage("Attempt " + attempts + ": Checking location " + location);
+            } while ((location.getBlockY() == 0 || location.getBlock().getType() != currentMap.getTriggerBlock()) && attempts < 100); // Ensure the block is the trigger block
+
+            if (attempts >= 100) {
+                player.sendMessage("Failed to find a valid location after 100 attempts.");
+                continue;
+            }
 
             // Place the player one block above the highest block found
             location.add(0, 1, 0);
 
             // Teleport the player to the location
             player.teleport(location);
+            Bukkit.broadcastMessage("Player " + player.getName() + " teleported to " + location);
         }
+        Bukkit.broadcastMessage("All players have been teleported!");
     }
 
     public void giveItems() {
@@ -94,6 +105,7 @@ public class TNTGame extends Minigame implements Listener {
             player.getInventory().clear();
             player.getInventory().addItem(new ItemStack(Material.FEATHER, 3));
         }
+        Bukkit.broadcastMessage("All players have been given items!");
     }
 
     public void resetPlayers() {
@@ -133,26 +145,30 @@ public class TNTGame extends Minigame implements Listener {
         Player player = event.getPlayer();
         Location from = event.getFrom().toBlockLocation();
         Location to = event.getTo().toBlockLocation();
-        if (!gameStarted) {
+
+        if (!gameStarted && players.contains(player)) {
             if (event.getFrom().getBlockX() != event.getTo().getBlockX() || event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
                 event.setCancelled(true);
             }
         }
+
         if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ()) {
             return;
         }
 
-        if (gameStarted) {
-            if (new Location(gameWorld, to.getBlockX(), to.getBlockY() - 1, to.getBlockZ()).getBlock().getType() == currentMap.getTriggerBlock()) {
-                // TODO: Display mining animation on the block.
+        if (gameStarted && players.contains(player)) {
+            Location blockBelow = new Location(gameWorld, to.getBlockX(), to.getBlockY() - 1, to.getBlockZ());
+            if (blockBelow.getBlock().getType() == currentMap.getTriggerBlock()) {
+                // Display mining animation on the block (optional)
                 Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
-                    to.getBlock().setType(Material.AIR);
+                    blockBelow.getBlock().setType(Material.AIR);
+                    Bukkit.broadcastMessage("Block at " + blockBelow + " set to AIR");
                 }, 20L);
             }
         }
 
         if (to.getBlockY() < currentMap.getElimHeight()) {
-            if (gameStarted) {
+            if (gameStarted && players.contains(player)) {
                 Bukkit.broadcastMessage(player.getName() + " has been eliminated!");
                 enableSpectatorMode(player);
                 players.remove(player);

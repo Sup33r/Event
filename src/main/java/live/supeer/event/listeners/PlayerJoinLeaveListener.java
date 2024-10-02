@@ -4,6 +4,7 @@ import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import live.supeer.event.EventPlayer;
 import live.supeer.event.managers.MinigameManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,6 +28,8 @@ public class PlayerJoinLeaveListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        minigameManager.getOnlinePlayers().removeIf(eventPlayer -> eventPlayer.getPlayer().equals(event.getPlayer()));
+        minigameManager.getActivePlayers().remove(event.getPlayer());
         minigameManager.getCurrentState().handlePlayerLeave(event.getPlayer());
     }
 

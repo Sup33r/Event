@@ -11,9 +11,13 @@ import live.supeer.event.Event;
 import live.supeer.event.EventPlayer;
 import live.supeer.event.managers.MinigameManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -70,18 +74,36 @@ public class EventCommand extends BaseCommand {
         // Item to display the current active state
         ItemStack stateItem = new ItemStack(Material.PAPER);
         ItemMeta stateMeta = stateItem.getItemMeta();
-        stateMeta.displayName(Component.text("Active State: " + (eventPlayer.isActive() ? "Active" : "Inactive")));
+        stateMeta.displayName(Component.text("Speldeltagande: " + (eventPlayer.isActive() ? "Aktiverat" : "Inaktiverat")).color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+        stateMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         stateItem.setItemMeta(stateMeta);
         pane.addItem(new GuiItem(stateItem), 4, 0); // Position within the adjusted pane dimensions
 
+        ItemStack disabledItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta disabledMeta = disabledItem.getItemMeta();
+        disabledMeta.displayName(Component.text("Inaktivt").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        disabledItem.setItemMeta(disabledMeta);
+
+        ItemStack enabledItem = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta enabledMeta = enabledItem.getItemMeta();
+        enabledMeta.displayName(Component.text("Aktivt").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false));
+        enabledItem.setItemMeta(enabledMeta);
+
+
         // Toggle button to switch the active state
         ToggleButton toggleButton = new ToggleButton(4, 1, 1, 1);
+        toggleButton.setDisabledItem(new GuiItem(disabledItem));
+        toggleButton.setEnabledItem(new GuiItem(enabledItem));
         toggleButton.setOnClick(event -> {
             boolean newState = !eventPlayer.isActive();
             eventPlayer.setActive(newState);
-            stateMeta.displayName(Component.text("Active State: " + (newState ? "Active" : "Inactive")));
+            if (newState) {
+                minigameManager.getActivePlayers().add(player);
+            } else {
+                minigameManager.getActivePlayers().remove(player);
+            }
+            stateMeta.displayName(Component.text("Speldeltagande: " + (newState ? "Aktiverat" : "Inaktiverat")).color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
             stateItem.setItemMeta(stateMeta);
-            player.sendMessage("Active state set to: " + (newState ? "Active" : "Inactive"));
         });
 
         if (eventPlayer.isActive() && !toggleButton.isEnabled()) {
