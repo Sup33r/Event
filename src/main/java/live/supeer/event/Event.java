@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public final class Event extends JavaPlugin {
@@ -52,6 +53,17 @@ public final class Event extends JavaPlugin {
         if (message != null && !message.isEmpty()) {
             Component component = languageManager.getMiniMessage().deserialize(message);
             sender.sendMessage(component);
+        }
+    }
+
+    public static void broadcastMessage(@NotNull List<Player> players, @NotNull String key, String... replacements) {
+        String message = languageManager.getValue(key, "sv_se", replacements);
+        if (message == null || message.isEmpty()) {
+            players.forEach(player -> player.sendMessage("§cMessage not found: " + key));
+        }
+        if (message != null && !message.isEmpty()) {
+            Component component = languageManager.getMiniMessage().deserialize(message);
+            players.forEach(player -> player.sendMessage(component));
         }
     }
 

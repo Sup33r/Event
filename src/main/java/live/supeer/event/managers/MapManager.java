@@ -22,7 +22,10 @@ public class MapManager {
         Path sourcePath = mapsDirectory.resolve(mapName);
         Path targetPath = Paths.get(Bukkit.getWorldContainer().getAbsolutePath(), mapName);
 
-        // Delete existing world folder if it exists
+        World world = Bukkit.getWorld(mapName);
+        if (world != null) {
+            Bukkit.unloadWorld(world, false);
+        }
         deleteDirectory(targetPath.toFile());
 
         // Copy map files
@@ -30,6 +33,12 @@ public class MapManager {
             copyDirectory(sourcePath, targetPath);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // Delete uid.dat file to avoid duplicate world issues
+        File uidFile = targetPath.resolve("uid.dat").toFile();
+        if (uidFile.exists()) {
+            uidFile.delete();
         }
 
         // Create and load the world

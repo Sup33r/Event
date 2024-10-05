@@ -25,8 +25,8 @@ public class TestGame extends Minigame implements Listener {
     @Override
     public List<GameMap> getAvailableMaps() {
         return Arrays.asList(
-                new GameMap("testmap1", null, null, null),
-                new GameMap("testmap2", null, null, null)
+                new GameMap("testmap1", null, null, null, new Location(gameWorld, -4, 32, 0)),
+                new GameMap("testmap2", null, null, null, new Location(gameWorld, -4, 32, 0))
         );
     }
 
