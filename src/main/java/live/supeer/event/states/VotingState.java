@@ -10,6 +10,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -28,6 +29,9 @@ public class VotingState implements GameState {
     @Override
     public void start() {
         Bukkit.broadcastMessage("Voting has started! Please vote for the next minigame.");
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.playSound(player.getLocation(), "block.note_block.pling", 1, 1);
+        }
         openVotingGUIForAllPlayers();
         // End voting after a set time
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L); // 30 seconds
@@ -91,6 +95,7 @@ public class VotingState implements GameState {
     public void castVote(Player player, Minigame minigame) {
         votes.put(minigame, votes.getOrDefault(minigame, 0) + 1);
         player.sendMessage("You voted for " + minigame.getName());
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 2);
     }
 }
 

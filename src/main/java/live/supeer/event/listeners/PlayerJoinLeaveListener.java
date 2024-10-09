@@ -29,6 +29,7 @@ public class PlayerJoinLeaveListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         minigameManager.getOnlinePlayers().removeIf(eventPlayer -> eventPlayer.getPlayer().equals(event.getPlayer()));
+        minigameManager.getOnlineBukkitPlayers().remove(event.getPlayer());
         minigameManager.getActivePlayers().remove(event.getPlayer());
         minigameManager.getCurrentState().handlePlayerLeave(event.getPlayer());
     }
@@ -45,6 +46,7 @@ public class PlayerJoinLeaveListener implements Listener {
             }
             EventPlayer eventPlayer = new EventPlayer(row);
             minigameManager.getOnlinePlayers().add(eventPlayer);
+            minigameManager.getOnlineBukkitPlayers().add(player);
             if (eventPlayer.isActive()) {
                 minigameManager.getActivePlayers().add(player);
             }

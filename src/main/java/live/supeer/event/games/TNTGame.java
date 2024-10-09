@@ -1,9 +1,6 @@
 package live.supeer.event.games;
 
-import live.supeer.event.CountdownTimer;
-import live.supeer.event.Event;
-import live.supeer.event.GameMap;
-import live.supeer.event.Minigame;
+import live.supeer.event.*;
 import live.supeer.event.managers.MinigameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -11,6 +8,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +17,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
@@ -31,6 +30,8 @@ public class TNTGame extends Minigame implements Listener {
     private List<Player> players = new ArrayList<>(minigameManager.getActivePlayers());
     private boolean gameEnded = false;
     private boolean gameStarted = false;
+
+    private final List<Block> brokenBlocks = new ArrayList<>();
 
     public TNTGame(MinigameManager minigameManager) {
         super("TNTGame", Material.TNT, minigameManager);
@@ -67,10 +68,23 @@ public class TNTGame extends Minigame implements Listener {
         unregisterListeners();
         blockRemovalTask.cancel();
         spectatorAll();
+
+        Location center = currentMap.getCenterLocation();
+        int radius = 17;
+        int fireworkCount = 20;
+
+        for (int i = 0; i < fireworkCount; i++) {
+            double angle = 2 * Math.PI * i / fireworkCount;
+            double x = center.getX() + radius * Math.cos(angle);
+            double z = center.getZ() + radius * Math.sin(angle);
+            Location fireworkLocation = new Location(gameWorld, x, center.getY(), z);
+            launchFirework(fireworkLocation);
+        }
+
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             resetPlayers();
             minigameManager.endGame();
-            }, 200L);
+        }, 200L);
     }
 
     public void spreadPlayers(Location center, int radius, Material triggerBlock, int maxAttempts) {
@@ -147,20 +161,17 @@ public class TNTGame extends Minigame implements Listener {
     public void showCountdown() {
         CountdownTimer timer = new CountdownTimer(
                 10,
-                () -> Bukkit.broadcastMessage("Game starting in 10 seconds!"),
+                () -> Event.broadcastMessage(players, "messages.games.common.starting"),
                 () -> {
-                    Bukkit.broadcastMessage("Game starting now!");
                     gameStarted = true;
                     startBlockRemoval();
                     giveItems();
                 },
                 (t) -> {
                     int secondsLeft = t.getSecondsLeft();
-                    Bukkit.broadcastMessage("Game starting in " + secondsLeft + " seconds!");
-
                     if (secondsLeft <= 5) {
                         String title = ">    " + secondsLeft + "    <";
-                        String subtitle = "Starting game in..";
+                        String subtitle = Event.getMessage("messages.games.common.countdown.subtitle");
                         TextColor color;
                         TextColor subtitleColor = TextColor.color(0xD1CECF);
 
@@ -187,7 +198,7 @@ public class TNTGame extends Minigame implements Listener {
                                 break;
                             case 0:
                                 color = TextColor.color(0xDCC6FF);
-                                title = "GO!";
+                                title = "KÖR!";
                                 subtitle = "";
                                 break;
                             default:
@@ -196,10 +207,14 @@ public class TNTGame extends Minigame implements Listener {
 
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             final Component mainTitle = Component.text(title).color(color).decorate(TextDecoration.BOLD);
+                            assert subtitle != null;
                             final Component subTitle = Component.text(subtitle).color(subtitleColor);
                             final Title.Times times = Title.Times.times(Duration.ofMillis(50), Duration.ofMillis(900), Duration.ofMillis(50));
                             final Title titleMessage = Title.title(mainTitle, subTitle, times);
                             player.showTitle(titleMessage);
+                            Sound sound = (secondsLeft > 3) ? Sound.BLOCK_NOTE_BLOCK_HAT : Sound.BLOCK_NOTE_BLOCK_PLING;
+                            float pitch = (secondsLeft == 0) ? 2.0f : 1.0f;
+                            player.playSound(player.getLocation(), sound, 1, pitch);
                         }
                     }
                 }
@@ -221,14 +236,53 @@ public class TNTGame extends Minigame implements Listener {
                 for (Block block : blocksBelow) {
                     if (!currentMap.getTriggerBlock().equals(block.getType())) continue;
 
+                    brokenBlocks.add(block);
+
+                    int blockId = block.getLocation().hashCode(); // Use block location hash as unique ID
+
+                    // Only show the damage effect once or twice for a smoother effect
+                    for (int i = 0; i <= 5; i++) {
+                        final float damage = i / 5.0f; // Update less frequently
+                        Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
+                            for (Player p : players) {
+                                p.sendBlockDamage(block.getLocation(), damage, blockId); // Use unique blockId
+                            }
+                        }, i * 4L); // Update every 4 ticks (adjust delay to make smoother)
+                    }
+
+                    // Remove the block and spawn particles after the damage animation
                     Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
                         block.setType(Material.AIR);
-                        gameWorld.spawnParticle(Particle.BLOCK, block.getLocation(), 1);
-                        gameWorld.playSound(block.getLocation(), Sound.BLOCK_LODESTONE_BREAK, 0.3f, 1);
-                    }, blockRemoveDelay);
+
+                        // Use block.getBlockData() to get the correct block particle data
+                        gameWorld.spawnParticle(Particle.BLOCK, block.getLocation(), 10, block.getBlockData());
+
+                        for (Player p : players) {
+                            p.playSound(block.getLocation(), Sound.BLOCK_LODESTONE_BREAK, 0.3f, 1);
+                        }
+                    }, blockRemoveDelay + 20L); // Delay after damage animation
                 }
             }
         }, 0L, 5L);
+    }
+
+    private void launchFirework(Location location) {
+        Firework firework = gameWorld.spawn(location, Firework.class);
+        FireworkMeta meta = firework.getFireworkMeta();
+        FireworkEffect.Type[] types = FireworkEffect.Type.values();
+        FireworkEffect.Type type = types[new Random().nextInt(types.length)];
+        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.PURPLE};
+        Color color = colors[new Random().nextInt(colors.length)];
+        Color fade = colors[new Random().nextInt(colors.length)];
+        meta.addEffect(FireworkEffect.builder()
+                .withColor(color)
+                .withFade(fade)
+                .with(type)
+                .trail(true)
+                .flicker(true)
+                .build());
+        meta.setPower(new Random().nextInt(2) + 1);
+        firework.setFireworkMeta(meta);
     }
 
     private List<Block> getRemovableBlocks(Player player) {
@@ -242,6 +296,9 @@ public class TNTGame extends Minigame implements Listener {
             block = getBlockUnderPlayer(y--, playerLocation);
 
             if (block != null && block.getType() == currentMap.getTriggerBlock()) {
+                if (brokenBlocks.contains(block)) {
+                    continue;
+                }
                 removableBlocks.add(block);
             }
         }
@@ -297,11 +354,12 @@ public class TNTGame extends Minigame implements Listener {
 
         if (to.getBlockY() < currentMap.getElimHeight()) {
             if (gameStarted) {
-                Bukkit.broadcastMessage(player.getName() + " has been eliminated!");
+                Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.tntgame.eliminated", "%player%", player.getName());
                 enableSpectatorMode(player);
                 players.remove(player);
                 if (players.size() == 1) {
-                    Bukkit.broadcastMessage(players.getFirst().getName() + " has won the TNTGame!");
+                    Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.common.winner", "%player%", players.getFirst().getName());
+                    //TODO: Printa ut statistik från spelet
                     endGame();
                 }
             } else {

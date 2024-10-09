@@ -30,6 +30,9 @@ public class MinigameManager {
     @Getter
     protected List<EventPlayer> onlinePlayers = new ArrayList<>();
 
+    @Getter
+    protected List<Player> onlineBukkitPlayers = new ArrayList<>();
+
     public MinigameManager() {
         this.mapManager = new MapManager();
         loadMinigames();

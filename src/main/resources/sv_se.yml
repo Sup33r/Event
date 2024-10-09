@@ -1,3 +1,10 @@
 messages:
   games:
-    tntrun:
+    common:
+      starting: "<yellow>Spelet börjar om 10 sekunder!"
+      eliminated: "<red>%player% blev eliminerad!"
+      winner: "<gold>%player% vann spelet!"
+      countdown:
+        subtitle: "Spelet börjar om.."
+    tntgame:
+      eliminated: "<red>%player% föll ner i avgrunden!"
