@@ -116,4 +116,10 @@ public class EventCommand extends BaseCommand {
         gui.setOnGlobalClick(event -> event.setCancelled(true));
         gui.show(player);
     }
+
+    @Subcommand("coins")
+    public void onCoins(Player player) {
+        EventPlayer eventPlayer = minigameManager.getEventPlayer(player);
+        player.sendMessage("You have " + eventPlayer.getPoints() + " coins.");
+    }
 }

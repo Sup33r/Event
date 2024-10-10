@@ -33,6 +33,8 @@ public class TNTGame extends Minigame implements Listener {
 
     private final List<Block> brokenBlocks = new ArrayList<>();
 
+    private final ArrayList<Player> scores = new ArrayList<>();
+
     public TNTGame(MinigameManager minigameManager) {
         super("TNTGame", Material.TNT, minigameManager);
     }
@@ -69,6 +71,8 @@ public class TNTGame extends Minigame implements Listener {
         blockRemovalTask.cancel();
         spectatorAll();
 
+        distributeCoins();
+
         Location center = currentMap.getCenterLocation();
         int radius = 17;
         int fireworkCount = 20;
@@ -85,6 +89,18 @@ public class TNTGame extends Minigame implements Listener {
             resetPlayers();
             minigameManager.endGame();
         }, 200L);
+    }
+
+    public void distributeCoins() {
+        Collections.reverse(scores);
+        Map<Player, Integer> playerCoins = minigameManager.calculateCoins(scores, 1.0f);
+        for (Map.Entry<Player, Integer> entry : playerCoins.entrySet()) {
+            Player player = entry.getKey();
+            int coins = entry.getValue();
+            EventPlayer eventPlayer = minigameManager.getEventPlayer(player);
+            eventPlayer.addPoints(coins);
+            player.sendMessage("You have been awarded " + coins + " coins for participating in the event.");
+        }
     }
 
     public void spreadPlayers(Location center, int radius, Material triggerBlock, int maxAttempts) {
@@ -163,6 +179,14 @@ public class TNTGame extends Minigame implements Listener {
                 10,
                 () -> Event.broadcastMessage(players, "messages.games.common.starting"),
                 () -> {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        final Component mainTitle = Component.text("KÖR!").color(TextColor.color(0xDCC6FF)).decorate(TextDecoration.BOLD);
+                        final Component subTitle = Component.text("");
+                        final Title.Times times = Title.Times.times(Duration.ofMillis(50), Duration.ofMillis(900), Duration.ofMillis(50));
+                        final Title titleMessage = Title.title(mainTitle, subTitle, times);
+                        player.showTitle(titleMessage);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 2.0f);
+                    }
                     gameStarted = true;
                     startBlockRemoval();
                     giveItems();
@@ -174,6 +198,8 @@ public class TNTGame extends Minigame implements Listener {
                         String subtitle = Event.getMessage("messages.games.common.countdown.subtitle");
                         TextColor color;
                         TextColor subtitleColor = TextColor.color(0xD1CECF);
+                        Sound sound = Sound.BLOCK_NOTE_BLOCK_HAT; // Default sound for regular countdown steps
+                        float pitch = 1.0f; // Default pitch
 
                         switch (secondsLeft) {
                             case 5:
@@ -187,19 +213,17 @@ public class TNTGame extends Minigame implements Listener {
                             case 3:
                                 color = TextColor.color(0xF8FF00);
                                 title = ">  3  <";
+                                sound = Sound.BLOCK_NOTE_BLOCK_PLING;
                                 break;
                             case 2:
                                 color = TextColor.color(0xFFB300);
                                 title = "> 2 <";
+                                sound = Sound.BLOCK_NOTE_BLOCK_PLING;
                                 break;
                             case 1:
                                 color = TextColor.color(0xFF4B00);
                                 title = ">1<";
-                                break;
-                            case 0:
-                                color = TextColor.color(0xDCC6FF);
-                                title = "KÖR!";
-                                subtitle = "";
+                                sound = Sound.BLOCK_NOTE_BLOCK_PLING;
                                 break;
                             default:
                                 color = TextColor.color(0xDCC6FF);
@@ -211,9 +235,9 @@ public class TNTGame extends Minigame implements Listener {
                             final Component subTitle = Component.text(subtitle).color(subtitleColor);
                             final Title.Times times = Title.Times.times(Duration.ofMillis(50), Duration.ofMillis(900), Duration.ofMillis(50));
                             final Title titleMessage = Title.title(mainTitle, subTitle, times);
+
                             player.showTitle(titleMessage);
-                            Sound sound = (secondsLeft > 3) ? Sound.BLOCK_NOTE_BLOCK_HAT : Sound.BLOCK_NOTE_BLOCK_PLING;
-                            float pitch = (secondsLeft == 0) ? 2.0f : 1.0f;
+
                             player.playSound(player.getLocation(), sound, 1, pitch);
                         }
                     }
@@ -357,8 +381,10 @@ public class TNTGame extends Minigame implements Listener {
                 Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.tntgame.eliminated", "%player%", player.getName());
                 enableSpectatorMode(player);
                 players.remove(player);
+                scores.add(player);
                 if (players.size() == 1) {
                     Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.common.winner", "%player%", players.getFirst().getName());
+                    scores.add(players.getFirst());
                     //TODO: Printa ut statistik från spelet
                     endGame();
                 }
