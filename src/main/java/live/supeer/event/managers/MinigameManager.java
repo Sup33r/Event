@@ -3,6 +3,7 @@ package live.supeer.event.managers;
 import live.supeer.event.EventPlayer;
 import live.supeer.event.Minigame;
 import live.supeer.event.games.CoolGame;
+import live.supeer.event.games.ParkourGame;
 import live.supeer.event.games.TNTGame;
 import live.supeer.event.games.TestGame;
 import live.supeer.event.states.*;
@@ -46,6 +47,7 @@ public class MinigameManager {
         minigames.add(new TestGame(this));
         minigames.add(new CoolGame(this));
         minigames.add(new TNTGame(this));
+        minigames.add(new ParkourGame(this));
     }
 
     public void startVoting() {
