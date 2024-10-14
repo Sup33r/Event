@@ -2,6 +2,7 @@ package live.supeer.event;
 
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.idb.DB;
+import com.google.common.collect.ImmutableList;
 import live.supeer.event.command.EventCommand;
 import live.supeer.event.listeners.PlayerJoinLeaveListener;
 import live.supeer.event.managers.LanguageManager;
@@ -36,6 +37,7 @@ public final class Event extends JavaPlugin {
 
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new EventCommand(minigameManager));
+        registerCompletions(manager, minigameManager);
 
         getServer().getPluginManager().registerEvents(new PlayerJoinLeaveListener(minigameManager), this);
     }
@@ -98,5 +100,13 @@ public final class Event extends JavaPlugin {
         } else {
             return Event.getInstance().getConfig().getString("settings.locale", "sv_se");
         }
+    }
+
+    public static void registerCompletions(PaperCommandManager manager, MinigameManager minigameManager) {
+        manager.getCommandCompletions().registerAsyncCompletion("minigames", c -> {
+            ImmutableList.Builder<String> builder = ImmutableList.builder();
+            minigameManager.getMinigames().forEach(minigame -> builder.add(minigame.getName()));
+            return builder.build();
+        });
     }
 }

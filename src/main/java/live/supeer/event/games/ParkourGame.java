@@ -61,10 +61,11 @@ public class ParkourGame extends Minigame implements Listener {
         gameStarted = false;
         gameEnded = false;
         registerListeners();
-        currentMap = getAvailableMaps().get(0);
+        currentMap = getAvailableMaps().getFirst();
         for (Player player : players) {
             playerLevels.put(player, 0);
         }
+        generateParkourCourse();
         showCountdown();
     }
 
@@ -75,7 +76,7 @@ public class ParkourGame extends Minigame implements Listener {
         unregisterListeners();
         spectatorAll();
 
-        Location center = players.get(0).getLocation();
+        Location center = players.getFirst().getLocation();
         int radius = 10;
         int fireworkCount = 20;
 
@@ -97,6 +98,7 @@ public class ParkourGame extends Minigame implements Listener {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setAllowFlight(false);
             player.setFlying(false);
+            player.setCollidable(false);
             player.setInvisible(false);
             player.setInvulnerable(false);
             player.getInventory().clear();
@@ -132,7 +134,6 @@ public class ParkourGame extends Minigame implements Listener {
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 2.0f);
                     }
                     gameStarted = true;
-                    generateParkourCourse();
                 },
                 (t) -> {
                     int secondsLeft = t.getSecondsLeft();
@@ -216,63 +217,74 @@ public class ParkourGame extends Minigame implements Listener {
         int schematicIndex = 0;
 
         if (schematicFiles.isEmpty()) {
-            Bukkit.getLogger().warning("No schematics found for parkourgame.");
+            Event.getInstance().getLogger().warning("No schematics found for parkourgame.");
             return;
         }
 
         Collections.shuffle(schematicFiles);
 
-        checkpointLocations.add(startingBlock.clone()); // Add starting block as first checkpoint
+        checkpointLocations.clear();
+        checkpointLocations.add(getLobbyLocation());
 
-        int parkourLength = 100;
-        while (totalSchematics < parkourLength) {
+        int parkourLength = 10;
+        int maxAttempts = parkourLength * 10;
+        int attemptCount = 0;
+
+        while (totalSchematics < parkourLength && attemptCount < maxAttempts) {
+            attemptCount++;
+            Event.getInstance().getLogger().info("Attempt " + attemptCount + " of " + maxAttempts);
+
             if (schematicIndex >= schematicFiles.size()) {
-                // Re-shuffle and reset index
                 Collections.shuffle(schematicFiles);
                 schematicIndex = 0;
             }
 
             File schematicFile = schematicFiles.get(schematicIndex);
             schematicIndex++;
+            Event.getInstance().getLogger().info("Loading schematic: " + schematicFile.getName());
 
             // Load the schematic as Clipboard
             Clipboard clipboard = schematicManager.loadSchematic(schematicFile);
             if (clipboard == null) {
+                Event.getInstance().getLogger().warning("Failed to load schematic: " + schematicFile.getName());
                 continue;
             }
 
-            // Find level 1 light blocks in the clipboard for the next paste position
             List<BlockVector3> pastePositions = schematicManager.findLightBlocks(clipboard, 1);
             if (pastePositions.isEmpty()) {
-                Bukkit.getLogger().warning("No level 1 light blocks found in schematic: " + schematicFile.getName());
+                Event.getInstance().getLogger().warning("No level 1 light blocks found in schematic: " + schematicFile.getName());
                 continue;
             }
 
-            // Find level 0 light blocks in the clipboard for checkpoints
             List<BlockVector3> checkpointPositions = schematicManager.findLightBlocks(clipboard, 0);
+
             if (checkpointPositions.isEmpty()) {
-                Bukkit.getLogger().warning("No level 0 light blocks found in schematic: " + schematicFile.getName());
+                Event.getInstance().getLogger().warning("No level 0 light blocks found in schematic: " + schematicFile.getName());
                 continue;
             }
 
-            // For simplicity, use the first light block for each purpose
-            BlockVector3 localPastePosition = pastePositions.get(0);
-            BlockVector3 localCheckpointPosition = checkpointPositions.get(0);
+            // Get the actual local orgin from schematic
+            var offset = clipboard.getMinimumPoint().subtract(clipboard.getOrigin());
 
-            // Paste the schematic at pastePosition
+            // Transform position with offset
+            BlockVector3 localPastePosition = pastePositions.getFirst().add(offset);
+            BlockVector3 localCheckpointPosition = checkpointPositions.getFirst().add(offset);
+
+            // Subtract the minimum point of the clipboard to get the local position
+            localPastePosition = localPastePosition.subtract(clipboard.getMinimumPoint());
+            localCheckpointPosition = localCheckpointPosition.subtract(clipboard.getMinimumPoint());
+
             schematicManager.pasteSchematic(gameWorld, clipboard, pastePosition);
 
             // Calculate the world coordinate of the checkpoint light block
             Location worldCheckpointPosition = pastePosition.clone().add(localCheckpointPosition.x(), localCheckpointPosition.y(), localCheckpointPosition.z());
 
             // Save the worldCheckpointPosition as a checkpoint
+            worldCheckpointPosition.setWorld(gameWorld);
             checkpointLocations.add(worldCheckpointPosition);
 
-            // Update pastePosition for the next schematic
-            // From the level 1 light block position, move +2 blocks in the desired direction (e.g., positive Z)
-            Location worldNextPastePosition = pastePosition.clone().add(localPastePosition.x(), localPastePosition.y(), localPastePosition.z()).add(0, 0, 2);
-
-            pastePosition = worldNextPastePosition.clone();
+            // Calculate the world coordinate of the next paste position
+            pastePosition = pastePosition.clone().add(localPastePosition.x(), 0.0, localPastePosition.z());
 
             totalSchematics++;
         }
@@ -286,38 +298,50 @@ public class ParkourGame extends Minigame implements Listener {
             return;
         }
 
+        if (!gameStarted) {
+            return;
+        }
+
         Location to = event.getTo();
 
         if (to.getBlockY() < currentMap.getElimHeight()) {
-            if (gameStarted) {
-                // Teleport to last checkpoint
-                int playerLevel = playerLevels.getOrDefault(player, 0);
-                if (playerLevel < checkpointLocations.size()) {
-                    Location checkpoint = checkpointLocations.get(playerLevel);
-                    player.teleport(checkpoint);
-                    player.sendMessage("You fell! Teleporting back to your last checkpoint.");
-                } else {
-                    // If no checkpoint found, teleport to starting block
-                    player.teleport(startingBlock);
+            // Teleport to last checkpoint
+            int playerLevel = playerLevels.getOrDefault(player, 0);
+            if (playerLevel < checkpointLocations.size()) {
+                Location checkpoint = checkpointLocations.get(playerLevel);
+                if (checkpoint.getWorld() == null) {
+                    checkpoint.setWorld(gameWorld);
                 }
+                player.teleport(checkpoint);
+                player.sendMessage("You fell! Teleporting back to your last checkpoint.");
             } else {
-                player.teleport(getLobbyLocation());
+                // If no checkpoint found, teleport to starting block
+                player.teleport(startingBlock);
             }
         } else {
             // Check if player has passed the next checkpoint
             int currentLevel = playerLevels.getOrDefault(player, 0);
             if (currentLevel < checkpointLocations.size() - 1) {
                 Location nextCheckpoint = checkpointLocations.get(currentLevel + 1);
-                // Check if player has reached the checkpoint (within a certain radius)
-                if (to.distanceSquared(nextCheckpoint) <= 4) { // Within 2 blocks
-                    // Player passed the next checkpoint
-                    playerLevels.put(player, currentLevel + 1);
-                    player.sendMessage("Checkpoint reached!");
+                if (nextCheckpoint.getWorld() == null) {
+                    nextCheckpoint.setWorld(gameWorld);
+                }
+
+                if (to.getWorld().equals(nextCheckpoint.getWorld())) {
+                    if (player.getLocation().getY() >= nextCheckpoint.getY() && player.getLocation().getZ() >= nextCheckpoint.getZ()) {
+                        playerLevels.put(player, currentLevel + 1);
+                        player.sendMessage("Checkpoint reached!");
+                    }
+//                    double distanceSquared = to.distanceSquared(nextCheckpoint);
+//                    Event.getInstance().getLogger().info("Distance squared to next checkpoint: " + distanceSquared);
+//
+//                    if (distanceSquared <= 9) { // Within 3 blocks
+//                        playerLevels.put(player, currentLevel + 1);
+//                        player.sendMessage("Checkpoint reached!");
+//                    }
                 }
             } else {
-                // Player has reached the end
                 player.sendMessage("You have completed the parkour!");
-                // Optionally, end the game
                 endGame();
             }
         }

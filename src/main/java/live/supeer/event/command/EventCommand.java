@@ -2,6 +2,7 @@ package live.supeer.event.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
@@ -121,5 +122,12 @@ public class EventCommand extends BaseCommand {
     public void onCoins(Player player) {
         EventPlayer eventPlayer = minigameManager.getEventPlayer(player);
         player.sendMessage("You have " + eventPlayer.getPoints() + " coins.");
+    }
+
+    @Subcommand("forcestart")
+    @CommandCompletion("@minigames")
+    public void onForceStart(Player player, String game) {
+        minigameManager.prepareMinigame(minigameManager.getMinigame(game));
+        player.sendMessage("Forcing game start...");
     }
 }

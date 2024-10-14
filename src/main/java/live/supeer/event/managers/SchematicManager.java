@@ -1,18 +1,17 @@
 package live.supeer.event.managers;
 
-import com.sk89q.jnbt.CompoundTag;
+import com.fastasyncworldedit.core.registry.state.PropertyKey;
 import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.*;
-import com.sk89q.worldedit.function.operation.Operation;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.regions.Region;
 
+import live.supeer.event.Event;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -48,7 +47,7 @@ public class SchematicManager {
     public Clipboard loadSchematic(File schematicFile) {
         ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
         if (format == null) {
-            Bukkit.getLogger().warning("Unknown schematic format: " + schematicFile.getName());
+            Event.getInstance().getLogger().warning("Unknown schematic format: " + schematicFile.getName());
             return null;
         }
         try (FileInputStream fis = new FileInputStream(schematicFile);
@@ -75,31 +74,16 @@ public class SchematicManager {
 
     public List<BlockVector3> findLightBlocks(Clipboard clipboard, int targetLevel) {
         List<BlockVector3> lightBlocks = new ArrayList<>();
-        Region region = clipboard.getRegion();
-
-        for (BlockVector3 position : region) {
-            BlockState blockState = clipboard.getBlock(position);
-
-            // Check if the block is a light block
-            if (blockState.getBlockType().id().equals("minecraft:light")) {
-
-                // Extract NBT data from the block state
-                CompoundTag nbtData = blockState.getNbtData();
-
-                // Check if the NBT contains the level information
-                if (nbtData != null && nbtData.containsKey("level")) {
-                    int level = nbtData.getInt("level"); // Retrieve the level
-
-                    // If the level matches the target level, add the block's position to the list
-                    if (level == targetLevel) {
-                        lightBlocks.add(position.subtract(clipboard.getOrigin()));
-                    }
+        for (BlockVector3 position : clipboard) {
+            BaseBlock baseBlock = clipboard.getFullBlock(position);
+            String blockType = baseBlock.getBlockType().id();
+            if (blockType.equals("minecraft:light")) {
+                var state = (Integer) baseBlock.getState(PropertyKey.LEVEL);
+                if (state == targetLevel) {
+                    lightBlocks.add(BlockVector3.at(position.x(), position.y(), position.z()));
                 }
             }
         }
-
         return lightBlocks;
     }
-
-
 }

@@ -58,6 +58,15 @@ public class MinigameManager {
         }
     }
 
+    public Minigame getMinigame(String name) {
+        for (Minigame minigame : minigames) {
+            if (minigame.getName().equalsIgnoreCase(name)) {
+                return minigame;
+            }
+        }
+        return null;
+    }
+
     public void prepareMinigame(Minigame minigame) {
         gameInProgress = true;
         minigame.prepareGame();
