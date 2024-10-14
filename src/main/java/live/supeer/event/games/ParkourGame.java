@@ -1,5 +1,6 @@
 package live.supeer.event.games;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import live.supeer.event.*;
 import live.supeer.event.managers.MinigameManager;
 import live.supeer.event.managers.SchematicManager;

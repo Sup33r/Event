@@ -61,12 +61,11 @@ public class SchematicManager {
 
     public void pasteSchematic(World world, Clipboard clipboard, Location location) {
         try (EditSession editSession = com.sk89q.worldedit.WorldEdit.getInstance().newEditSession(new BukkitWorld(world))) {
-            Operation operation = new ClipboardHolder(clipboard)
-                    .createPaste(editSession)
-                    .to(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()))
-                    .ignoreAirBlocks(false)
-                    .build();
-            Operations.complete(operation);
+            Bukkit.broadcastMessage("Pasting clipboard with min: " + clipboard.getMinimumPoint());
+            Bukkit.broadcastMessage("Pasting clipboard with max: " + clipboard.getMaximumPoint());
+            Bukkit.broadcastMessage("Pasting clipboard with origin: " + clipboard.getOrigin());
+            Bukkit.broadcastMessage("Pasting clipboard at: " + location);
+            clipboard.paste(editSession.extent, BukkitAdapter.asBlockVector(location), true);
         } catch (WorldEditException e) {
             e.printStackTrace();
         }
