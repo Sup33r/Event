@@ -44,6 +44,14 @@ public class SchematicManager {
                 .orElse(new File[0]);
     }
 
+    public File getSchematic(String gameType, String difficulty, String schematicName) {
+        return schematicsDirectory.resolve(gameType).resolve(difficulty).resolve(schematicName).toFile();
+    }
+
+    public File getGameSchematic(String gameType, String schematicName) {
+        return schematicsDirectory.resolve(gameType).resolve(schematicName).toFile();
+    }
+
     public Clipboard loadSchematic(File schematicFile) {
         ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
         if (format == null) {
@@ -61,10 +69,6 @@ public class SchematicManager {
 
     public void pasteSchematic(World world, Clipboard clipboard, Location location) {
         try (EditSession editSession = com.sk89q.worldedit.WorldEdit.getInstance().newEditSession(new BukkitWorld(world))) {
-            Bukkit.broadcastMessage("Pasting clipboard with min: " + clipboard.getMinimumPoint());
-            Bukkit.broadcastMessage("Pasting clipboard with max: " + clipboard.getMaximumPoint());
-            Bukkit.broadcastMessage("Pasting clipboard with origin: " + clipboard.getOrigin());
-            Bukkit.broadcastMessage("Pasting clipboard at: " + location);
             clipboard.paste(editSession.extent, BukkitAdapter.asBlockVector(location), true);
         } catch (WorldEditException e) {
             e.printStackTrace();

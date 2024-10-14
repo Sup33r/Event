@@ -9,16 +9,23 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.io.File;
 import java.time.Duration;
@@ -35,6 +42,12 @@ public class ParkourGame extends Minigame implements Listener {
 
     private final Location startingBlock = new Location(gameWorld, 6, 50, 3);
 
+    private Location endBlock;
+
+    private ItemDisplay barrierWall;
+    private double barrierSpeed = 0.001;
+    private double speedIncrement = 0.0009;
+
     private final SchematicManager schematicManager = new SchematicManager();
 
     private GameMap currentMap;
@@ -46,7 +59,7 @@ public class ParkourGame extends Minigame implements Listener {
     @Override
     public List<GameMap> getAvailableMaps() {
         return List.of(
-                new GameMap("parkourmap1", null, null, 0, null)
+                new GameMap("parkourmap1", null, null, 20, null)
         );
     }
 
@@ -77,15 +90,14 @@ public class ParkourGame extends Minigame implements Listener {
         unregisterListeners();
         spectatorAll();
 
-        Location center = players.getFirst().getLocation();
         int radius = 10;
         int fireworkCount = 20;
 
         for (int i = 0; i < fireworkCount; i++) {
             double angle = 2 * Math.PI * i / fireworkCount;
-            double x = center.getX() + radius * Math.cos(angle);
-            double z = center.getZ() + radius * Math.sin(angle);
-            Location fireworkLocation = new Location(gameWorld, x, center.getY(), z);
+            double x = endBlock.getX() + radius * Math.cos(angle);
+            double z = endBlock.getZ() + radius * Math.sin(angle);
+            Location fireworkLocation = new Location(gameWorld, x, endBlock.getY(), z);
             launchFirework(fireworkLocation);
         }
 
@@ -134,6 +146,8 @@ public class ParkourGame extends Minigame implements Listener {
                         player.showTitle(titleMessage);
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 2.0f);
                     }
+                    deleteWall();
+                    spawnBarrierBlock();
                     gameStarted = true;
                 },
                 (t) -> {
@@ -210,8 +224,81 @@ public class ParkourGame extends Minigame implements Listener {
         firework.setFireworkMeta(meta);
     }
 
+    private void spawnBarrierBlock() {
+        Location spawnLocation = new Location(gameWorld, 0, 54, -10);
+        barrierWall = gameWorld.spawn(spawnLocation, ItemDisplay.class, item -> {
+            item.setItemStack(new ItemStack(Material.BARRIER));
+            item.setCustomNameVisible(false);
+            item.setGravity(false);
+            item.setInvulnerable(true);
+            item.setPersistent(true);
+            item.setTransformation(new Transformation(
+                    new Vector3f(0f, 0f, 0f), // Translation
+                    new Quaternionf(0f, 0f, 0f, 1f), // Left rotation
+                    new Vector3f(20f, 20f, 1f), // Scale
+                    new Quaternionf(0f, 0f, 0f, 1f) // Right rotation
+            ));
+        });
+
+        moveBarrierBlock();
+    }
+
+    private void moveBarrierBlock() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (gameEnded) {
+                    this.cancel();
+                    return;
+                }
+
+                Location currentLocation = barrierWall.getLocation();
+                currentLocation.setZ(currentLocation.getZ() + barrierSpeed);
+                barrierWall.teleport(currentLocation);
+
+                barrierSpeed += speedIncrement; // Increase speed
+
+                // Placeholder for player elimination check
+                checkPlayerElimination();
+            }
+        }.runTaskTimer(Event.getInstance(), 0L, 1L); // Run every tick
+    }
+
+    private void checkPlayerElimination() {
+        double barrierZ = barrierWall.getLocation().getZ();
+
+        for (Player player : players) {
+            if (player.getLocation().getZ() < barrierZ) {
+                eliminatePlayer(player);
+            }
+        }
+    }
+
+    private void eliminatePlayer(Player player) {
+        player.sendMessage("You have been eliminated!");
+        enableSpectatorMode(player);
+        players.remove(player);
+        if (players.size() == 1) {
+            Player winner = players.getFirst();
+            winner.sendMessage("Congratulations! You have won the game!");
+            endGame();
+        }
+    }
+
+    private void deleteWall() {
+        Location wallStart = new Location(gameWorld, 0, 51, 1);
+        Location wallEnd = new Location(gameWorld, -2, 53, 1);
+        for (int x = wallStart.getBlockX(); x >= wallEnd.getBlockX(); x--) {
+            for (int y = wallStart.getBlockY(); y <= wallEnd.getBlockY(); y++) {
+                for (int z = wallStart.getBlockZ(); z <= wallEnd.getBlockZ(); z++) {
+                    Block block = gameWorld.getBlockAt(x, y, z);
+                    block.setType(Material.AIR);
+                }
+            }
+        }
+    }
+
     private void generateParkourCourse() {
-        // Initialize variables
         List<File> schematicFiles = new ArrayList<>(schematicManager.listSchematicsForGame("parkourgame").keySet());
         int totalSchematics = 0;
         Location pastePosition = startingBlock.clone();
@@ -233,8 +320,6 @@ public class ParkourGame extends Minigame implements Listener {
 
         while (totalSchematics < parkourLength && attemptCount < maxAttempts) {
             attemptCount++;
-            Event.getInstance().getLogger().info("Attempt " + attemptCount + " of " + maxAttempts);
-
             if (schematicIndex >= schematicFiles.size()) {
                 Collections.shuffle(schematicFiles);
                 schematicIndex = 0;
@@ -242,8 +327,6 @@ public class ParkourGame extends Minigame implements Listener {
 
             File schematicFile = schematicFiles.get(schematicIndex);
             schematicIndex++;
-            Event.getInstance().getLogger().info("Loading schematic: " + schematicFile.getName());
-
             // Load the schematic as Clipboard
             Clipboard clipboard = schematicManager.loadSchematic(schematicFile);
             if (clipboard == null) {
@@ -264,7 +347,7 @@ public class ParkourGame extends Minigame implements Listener {
                 continue;
             }
 
-            // Get the actual local orgin from schematic
+            // Get the actual local origin from schematic
             var offset = clipboard.getMinimumPoint().subtract(clipboard.getOrigin());
 
             // Transform position with offset
@@ -289,23 +372,55 @@ public class ParkourGame extends Minigame implements Listener {
 
             totalSchematics++;
         }
+
+        // Load the finish schematic
+        File finishSchematicFile = schematicManager.getGameSchematic("parkourgame", "parkourfinish.schem");
+        Clipboard finishClipboard = schematicManager.loadSchematic(finishSchematicFile);
+        if (finishClipboard == null) {
+            Event.getInstance().getLogger().warning("Failed to load finish schematic: parkourfinish.schem");
+            return;
+        }
+
+        List<BlockVector3> finishPositions = schematicManager.findLightBlocks(finishClipboard, 0);
+        if (finishPositions.isEmpty()) {
+            Event.getInstance().getLogger().warning("No level 0 light blocks found in finish schematic: parkourfinish.schem");
+            return;
+        }
+
+        // Get the actual local origin from finish schematic
+        var finishOffset = finishClipboard.getMinimumPoint().subtract(finishClipboard.getOrigin());
+
+        // Transform position with offset
+        BlockVector3 localFinishPosition = finishPositions.getFirst().add(finishOffset);
+
+        // Subtract the minimum point of the clipboard to get the local position
+        localFinishPosition = localFinishPosition.subtract(finishClipboard.getMinimumPoint());
+
+        schematicManager.pasteSchematic(gameWorld, finishClipboard, pastePosition);
+
+        // Calculate the world coordinate of the finish light block
+        Location worldFinishPosition = pastePosition.clone().add(localFinishPosition.x(), localFinishPosition.y(), localFinishPosition.z());
+
+        // Save the worldFinishPosition as the finish line location
+        worldFinishPosition.setWorld(gameWorld);
+        checkpointLocations.add(worldFinishPosition);
+        endBlock = worldFinishPosition.clone();
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        if (gameEnded || !players.contains(player)) {
+        if (gameEnded) {
             return;
         }
-
-        if (!gameStarted) {
-            return;
-        }
-
         Location to = event.getTo();
 
         if (to.getBlockY() < currentMap.getElimHeight()) {
+            if (!gameStarted || !players.contains(player)) {
+                player.teleport(getLobbyLocation());
+                return;
+            }
             // Teleport to last checkpoint
             int playerLevel = playerLevels.getOrDefault(player, 0);
             if (playerLevel < checkpointLocations.size()) {
@@ -320,7 +435,9 @@ public class ParkourGame extends Minigame implements Listener {
                 player.teleport(startingBlock);
             }
         } else {
-            // Check if player has passed the next checkpoint
+            if (!players.contains(player)) {
+                return;
+            }
             int currentLevel = playerLevels.getOrDefault(player, 0);
             if (currentLevel < checkpointLocations.size() - 1) {
                 Location nextCheckpoint = checkpointLocations.get(currentLevel + 1);
@@ -330,20 +447,21 @@ public class ParkourGame extends Minigame implements Listener {
 
                 if (to.getWorld().equals(nextCheckpoint.getWorld())) {
                     if (player.getLocation().getY() >= nextCheckpoint.getY() && player.getLocation().getZ() >= nextCheckpoint.getZ()) {
+                        if (!gameStarted) {
+                            player.sendMessage(":o You're not supposed to be here yet!");
+                            player.teleport(getLobbyLocation());
+                            return;
+                        }
                         playerLevels.put(player, currentLevel + 1);
                         player.sendMessage("Checkpoint reached!");
+
+                        // Check if this is the last checkpoint
+                        if (currentLevel + 1 == checkpointLocations.size() - 1) {
+                            player.sendMessage("Congratulations! You have completed the parkour course!");
+                            endGame();
+                        }
                     }
-//                    double distanceSquared = to.distanceSquared(nextCheckpoint);
-//                    Event.getInstance().getLogger().info("Distance squared to next checkpoint: " + distanceSquared);
-//
-//                    if (distanceSquared <= 9) { // Within 3 blocks
-//                        playerLevels.put(player, currentLevel + 1);
-//                        player.sendMessage("Checkpoint reached!");
-//                    }
                 }
-            } else {
-                player.sendMessage("You have completed the parkour!");
-                endGame();
             }
         }
     }
