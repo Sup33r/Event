@@ -1,6 +1,7 @@
 messages:
   games:
     common:
+      line: "<%color%><strikethrough>                                                                                 </strikethrough>"
       starting: "<yellow>Spelet börjar om 10 sekunder!"
       eliminated: "<red>%player% blev eliminerad!"
       winner: "<gold>%player% vann spelet!"
@@ -8,3 +9,13 @@ messages:
         subtitle: "Spelet börjar om.."
     tntgame:
       eliminated: "<red>%player% föll ner i avgrunden!"
+    parkourgame:
+      fell: "<red>Du föll ner. Teleporterar dig till senaste checkpointen!"
+      eliminated: "<red>%player% blev uppslukad av världsgränsen."
+      winnings: "<#FFB56F>Du tjänade %points% poäng (%segments% segment)!"
+      finished: "<yellow><br>%player% klarade av hela parkourbanan!<br>"
+      winner: "<yellow><br>%player% vann genom att vara sista överlevande!<br>"
+      top:
+        1: "<#FDFF95><bold>1:a %player% - %score% segment"
+        2: "<#C7D3F3><bold>2:a %player% - %score% segment"
+        3: "<#FA6B33><bold>3:a %player% - %score% segment"
