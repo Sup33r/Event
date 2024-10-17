@@ -3,6 +3,7 @@ package live.supeer.event;
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.idb.DB;
 import com.google.common.collect.ImmutableList;
+import fr.mrmicky.fastboard.adventure.FastBoard;
 import live.supeer.event.command.EventCommand;
 import live.supeer.event.listeners.PlayerJoinLeaveListener;
 import live.supeer.event.managers.LanguageManager;
@@ -15,7 +16,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public final class Event extends JavaPlugin {
@@ -24,6 +27,9 @@ public final class Event extends JavaPlugin {
     public static EventConfiguration configuration;
     public Logger logger = null;
     private static LanguageManager languageManager;
+
+    public static final Map<Player, FastBoard> playerBoards = new HashMap<>();
+
 
     @Override
     public void onEnable() {

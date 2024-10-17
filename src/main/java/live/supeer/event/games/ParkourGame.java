@@ -1,5 +1,6 @@
 package live.supeer.event.games;
 
+import fr.mrmicky.fastboard.adventure.FastBoard;
 import live.supeer.event.*;
 import live.supeer.event.managers.MinigameManager;
 import live.supeer.event.managers.SchematicManager;
@@ -72,7 +73,11 @@ public class ParkourGame extends Minigame implements Listener {
         players = new ArrayList<>(minigameManager.getActivePlayers());
         gameStarted = false;
         gameEnded = false;
+
         registerListeners();
+
+        minigameManager.playerCollisions(false);
+
         currentMap = getAvailableMaps().getFirst();
         for (Player player : players) {
             playerLevels.put(player, 0);
@@ -94,8 +99,8 @@ public class ParkourGame extends Minigame implements Listener {
         sendScores();
         distributeCoins();
 
-        int radius = 10;
-        int fireworkCount = 20;
+        int radius = 15;
+        int fireworkCount = 10;
 
         for (int i = 0; i < fireworkCount; i++) {
             double angle = 2 * Math.PI * i / fireworkCount;
@@ -139,6 +144,23 @@ public class ParkourGame extends Minigame implements Listener {
         player.getInventory().clear();
     }
 
+    private void updateScoreboard() {
+        for (Player player : players) {
+            FastBoard board = Event.playerBoards.get(player);
+            int playerLevel = playerLevels.getOrDefault(player, 0);
+            double borderDistance = Math.abs(player.getLocation().getZ() - barrierWall.getLocation().getZ());
+            board.updateLines(
+                    Component.text(""),
+                    Component.text("Spelare kvar: " + players.size()),
+                    Component.text("Segment: " + playerLevel + " / " + (checkpointLocations.size() - 2)),
+                    Component.text(String.format("Borderhastighet: %.2f block/s", barrierSpeed * 20)),
+                    Component.text("Distans från bordern: " + (int) borderDistance + " block"),
+                    Component.text(""),
+                    Component.text("enserver.se")
+            );
+        }
+    }
+
     public void showCountdown() {
         CountdownTimer timer = new CountdownTimer(
                 10,
@@ -154,6 +176,15 @@ public class ParkourGame extends Minigame implements Listener {
                     }
                     deleteWall();
                     spawnBarrierBlock();
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (gameEnded) {
+                                this.cancel();
+                            }
+                            updateScoreboard();
+                        }
+                    }.runTaskTimer(Event.getInstance(), 0L, 20L);
                     gameStarted = true;
                 },
                 (t) -> {
@@ -303,6 +334,9 @@ public class ParkourGame extends Minigame implements Listener {
     }
 
     private void distributeCoins() {
+        if (playerLevels.isEmpty()) {
+            return;
+        }
         Map<Player, Integer> playerCoins = minigameManager.calculateCoins(playerLevels, 1.0f);
         for (Map.Entry<Player, Integer> entry : playerCoins.entrySet()) {
             Player player = entry.getKey();
@@ -331,6 +365,10 @@ public class ParkourGame extends Minigame implements Listener {
             if (topPlayer != null) {
                 topPlayers.add(topPlayer);
             }
+        }
+
+        if (topPlayers.isEmpty()) {
+            return;
         }
 
         Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.common.line", "%color%", "gray");
@@ -494,6 +532,7 @@ public class ParkourGame extends Minigame implements Listener {
                         }
                         playerLevels.put(player, currentLevel + 1);
                         player.showTitle(Title.title(Component.text(""), Component.text("Checkpoint nådd!").color(NamedTextColor.YELLOW), Title.Times.times(Duration.ofMillis(50), Duration.ofMillis(900), Duration.ofMillis(50))));
+                        player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 1, 1);
 
                         if (currentLevel + 1 == checkpointLocations.size() - 1) {
                             Event.broadcastMessage(minigameManager.getOnlineBukkitPlayers(), "messages.games.parkourgame.finished", "%player%", player.getName());

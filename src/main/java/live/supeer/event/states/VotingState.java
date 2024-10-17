@@ -3,6 +3,7 @@ package live.supeer.event.states;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import fr.mrmicky.fastboard.adventure.FastBoard;
 import live.supeer.event.Event;
 import live.supeer.event.Minigame;
 import live.supeer.event.managers.MinigameManager;
@@ -14,6 +15,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,19 +24,33 @@ public class VotingState implements GameState {
     private final MinigameManager minigameManager;
     private final Map<Minigame, Integer> votes = new HashMap<>();
 
+    private int remainingTime = 30;
+
     public VotingState(MinigameManager minigameManager) {
         this.minigameManager = minigameManager;
     }
 
     @Override
     public void start() {
+        updateScoreboard();
         Bukkit.broadcastMessage("Voting has started! Please vote for the next minigame.");
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.playSound(player.getLocation(), "block.note_block.pling", 1, 1);
         }
         openVotingGUIForAllPlayers();
         // End voting after a set time
-        Bukkit.getScheduler().runTaskLater(Event.getInstance(), this::endVoting, 600L); // 30 seconds
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (remainingTime > 0) {
+                    remainingTime--;
+                    updateScoreboard();
+                } else {
+                    endVoting();
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(Event.getInstance(), 0L, 20L); // 20 ticks = 1 second
     }
 
     @Override
@@ -45,11 +61,13 @@ public class VotingState implements GameState {
     @Override
     public void handlePlayerJoin(Player player) {
         openVotingGUI(player);
+        updateScoreboard();
     }
 
     @Override
     public void handlePlayerLeave(Player player) {
         // Remove player's vote if necessary
+        updateScoreboard();
     }
 
     private void endVoting() {
@@ -96,6 +114,21 @@ public class VotingState implements GameState {
         votes.put(minigame, votes.getOrDefault(minigame, 0) + 1);
         player.sendMessage("You voted for " + minigame.getName());
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 2);
+    }
+
+    private void updateScoreboard() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            FastBoard board = Event.playerBoards.get(player);
+            board.updateLines(
+                    Component.text(""),
+                    Component.text("Omröstning av spel"),
+                    Component.text("Tid kvar: " + remainingTime + "s"),
+                    Component.text(""),
+                    Component.text("Spelare: " + Bukkit.getOnlinePlayers().size()),
+                    Component.text(""),
+                    Component.text("enserver.se")
+            );
+        }
     }
 }
 

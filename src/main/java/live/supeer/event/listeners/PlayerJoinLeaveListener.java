@@ -2,8 +2,11 @@ package live.supeer.event.listeners;
 
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
+import fr.mrmicky.fastboard.adventure.FastBoard;
+import live.supeer.event.Event;
 import live.supeer.event.EventPlayer;
 import live.supeer.event.managers.MinigameManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,7 +26,11 @@ public class PlayerJoinLeaveListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         handleEventPlayer(event.getPlayer());
+        Event.playerBoards.put(event.getPlayer(), new FastBoard(event.getPlayer()));
+        Event.playerBoards.get(event.getPlayer()).updateTitle(Component.text("EnServer"));
         minigameManager.getCurrentState().handlePlayerJoin(event.getPlayer());
+
+        minigameManager.teamAddPlayer(event.getPlayer());
     }
 
     @EventHandler
@@ -32,6 +39,9 @@ public class PlayerJoinLeaveListener implements Listener {
         minigameManager.getOnlineBukkitPlayers().remove(event.getPlayer());
         minigameManager.getActivePlayers().remove(event.getPlayer());
         minigameManager.getCurrentState().handlePlayerLeave(event.getPlayer());
+
+        Event.playerBoards.remove(event.getPlayer());
+        minigameManager.teamRemovePlayer(event.getPlayer());
     }
 
     public void handleEventPlayer(Player player) {

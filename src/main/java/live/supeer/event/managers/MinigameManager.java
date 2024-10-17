@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +42,8 @@ public class MinigameManager {
         loadMinigames();
         currentState = new WaitingState(this);
         currentState.start();
+
+        handleCollisions();
     }
 
     private void loadMinigames() {
@@ -148,4 +151,44 @@ public class MinigameManager {
         return playerCoins;
     }
         // Additional methods for handling player events
+    private void handleCollisions() {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("event");
+
+        if (team == null) {
+            team = Bukkit.getScoreboardManager().getMainScoreboard().registerNewTeam("event");
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            team.addEntry(player.getName());
+        }
+
+        team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+
+    }
+
+    public void playerCollisions(boolean collisions) {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("event");
+        if (team == null) {
+            return;
+        }
+
+        team.setOption(Team.Option.COLLISION_RULE, collisions ? Team.OptionStatus.ALWAYS : Team.OptionStatus.NEVER);
+    }
+
+    public void teamAddPlayer(Player player) {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("event");
+        if (team == null) {
+            return;
+        }
+
+        team.addEntry(player.getName());
+    }
+
+    public void teamRemovePlayer(Player player) {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("event");
+        if (team == null) {
+            return;
+        }
+
+        team.removeEntry(player.getName());
+    }
 }
