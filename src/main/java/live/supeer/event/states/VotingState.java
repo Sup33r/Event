@@ -38,7 +38,6 @@ public class VotingState implements GameState {
             player.playSound(player.getLocation(), "block.note_block.pling", 1, 1);
         }
         openVotingGUIForAllPlayers();
-        // End voting after a set time
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -50,7 +49,7 @@ public class VotingState implements GameState {
                     this.cancel();
                 }
             }
-        }.runTaskTimer(Event.getInstance(), 0L, 20L); // 20 ticks = 1 second
+        }.runTaskTimer(Event.getInstance(), 0L, 20L);
     }
 
     @Override
@@ -66,7 +65,6 @@ public class VotingState implements GameState {
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Remove player's vote if necessary
         updateScoreboard();
     }
 
@@ -80,7 +78,7 @@ public class VotingState implements GameState {
         return votes.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(minigameManager.getMinigames().getFirst()); // Default to first minigame
+                .orElse(minigameManager.getMinigames().getFirst());
     }
 
     private void openVotingGUIForAllPlayers() {
@@ -126,7 +124,7 @@ public class VotingState implements GameState {
                     Component.text(""),
                     Component.text("Spelare: " + Bukkit.getOnlinePlayers().size()),
                     Component.text(""),
-                    Component.text("enserver.se")
+                    Component.text("Event")
             );
         }
     }

@@ -13,10 +13,7 @@ import live.supeer.event.EventPlayer;
 import live.supeer.event.managers.MinigameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.apache.commons.lang3.StringUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -61,9 +58,8 @@ public class EventCommand extends BaseCommand {
 
     private void showSettingsGui(Player player) {
         ChestGui gui = new ChestGui(2, "Settings");
-        StaticPane pane = new StaticPane(0, 0, 9, 2); // Adjusted dimensions to cover the entire GUI
+        StaticPane pane = new StaticPane(0, 0, 9, 2);
 
-        // Get the EventPlayer instance for the player
         EventPlayer eventPlayer = minigameManager.getOnlinePlayers().stream()
                 .filter(ep -> ep.getUuid().equals(player.getUniqueId()))
                 .findFirst()
@@ -74,13 +70,12 @@ public class EventCommand extends BaseCommand {
             return;
         }
 
-        // Item to display the current active state
         ItemStack stateItem = new ItemStack(Material.PAPER);
         ItemMeta stateMeta = stateItem.getItemMeta();
         stateMeta.displayName(Component.text("Speldeltagande: " + (eventPlayer.isActive() ? "Aktiverat" : "Inaktiverat")).color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
         stateMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         stateItem.setItemMeta(stateMeta);
-        pane.addItem(new GuiItem(stateItem), 4, 0); // Position within the adjusted pane dimensions
+        pane.addItem(new GuiItem(stateItem), 4, 0);
 
         ItemStack disabledItem = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta disabledMeta = disabledItem.getItemMeta();
@@ -92,8 +87,6 @@ public class EventCommand extends BaseCommand {
         enabledMeta.displayName(Component.text("Aktivt").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false));
         enabledItem.setItemMeta(enabledMeta);
 
-
-        // Toggle button to switch the active state
         ToggleButton toggleButton = new ToggleButton(4, 1, 1, 1);
         toggleButton.setDisabledItem(new GuiItem(disabledItem));
         toggleButton.setEnabledItem(new GuiItem(enabledItem));

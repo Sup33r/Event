@@ -49,7 +49,7 @@ public class TNTGame extends Minigame implements Listener {
 
     @Override
     public Location getLobbyLocation() {
-        return new Location(gameWorld, -4, 38, 23); // Adjust coordinates accordingly
+        return new Location(gameWorld, -4, 38, 23);
     }
 
     @Override
@@ -198,8 +198,8 @@ public class TNTGame extends Minigame implements Listener {
                         String subtitle = Event.getMessage("messages.games.common.countdown.subtitle");
                         TextColor color;
                         TextColor subtitleColor = TextColor.color(0xD1CECF);
-                        Sound sound = Sound.BLOCK_NOTE_BLOCK_HAT; // Default sound for regular countdown steps
-                        float pitch = 1.0f; // Default pitch
+                        Sound sound = Sound.BLOCK_NOTE_BLOCK_HAT;
+                        float pitch = 1.0f;
 
                         switch (secondsLeft) {
                             case 5:
@@ -262,29 +262,26 @@ public class TNTGame extends Minigame implements Listener {
 
                     brokenBlocks.add(block);
 
-                    int blockId = block.getLocation().hashCode(); // Use block location hash as unique ID
+                    int blockId = block.getLocation().hashCode();
 
-                    // Only show the damage effect once or twice for a smoother effect
                     for (int i = 0; i <= 5; i++) {
                         final float damage = i / 5.0f; // Update less frequently
                         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
                             for (Player p : players) {
-                                p.sendBlockDamage(block.getLocation(), damage, blockId); // Use unique blockId
+                                p.sendBlockDamage(block.getLocation(), damage, blockId);
                             }
-                        }, i * 4L); // Update every 4 ticks (adjust delay to make smoother)
+                        }, i * 4L);
                     }
 
-                    // Remove the block and spawn particles after the damage animation
                     Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
                         block.setType(Material.AIR);
 
-                        // Use block.getBlockData() to get the correct block particle data
                         gameWorld.spawnParticle(Particle.BLOCK, block.getLocation(), 10, block.getBlockData());
 
                         for (Player p : players) {
                             p.playSound(block.getLocation(), Sound.BLOCK_LODESTONE_BREAK, 0.3f, 1);
                         }
-                    }, blockRemoveDelay + 20L); // Delay after damage animation
+                    }, blockRemoveDelay + 20L);
                 }
             }
         }, 0L, 5L);

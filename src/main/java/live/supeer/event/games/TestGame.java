@@ -16,6 +16,8 @@ import java.util.List;
 
 public class TestGame extends Minigame implements Listener {
 
+    // A template game for testing purposes
+
     private boolean gameEnded = false;
 
     public TestGame(MinigameManager minigameManager) {
@@ -39,7 +41,6 @@ public class TestGame extends Minigame implements Listener {
     public void startGame() {
         gameEnded = false;
         registerListeners();
-        // Game logic here
         Bukkit.broadcastMessage("TestGame has started!");
     }
 
@@ -54,7 +55,6 @@ public class TestGame extends Minigame implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        // Implement game logic, e.g., check for block interaction
         if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.DIAMOND_BLOCK) {
             Player winner = event.getPlayer();
             Bukkit.broadcastMessage(winner.getName() + " has won the TestGame!");

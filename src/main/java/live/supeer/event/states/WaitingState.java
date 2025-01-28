@@ -23,7 +23,6 @@ public class WaitingState implements GameState {
 
     @Override
     public void stop() {
-        // Cleanup if necessary
     }
 
     @Override
@@ -35,7 +34,6 @@ public class WaitingState implements GameState {
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving during waiting state
         updateScoreboard();
     }
 
@@ -53,7 +51,7 @@ public class WaitingState implements GameState {
                     Component.text("Spelare: " + Bukkit.getOnlinePlayers().size()),
                     Component.text("Status: Väntar"),
                     Component.text(""),
-                    Component.text("enserver.se")
+                    Component.text("Event")
             );
         }
     }

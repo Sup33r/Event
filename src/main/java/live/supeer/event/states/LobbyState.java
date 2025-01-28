@@ -25,12 +25,11 @@ public class LobbyState implements GameState {
         announceNonActive();
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             minigameManager.startGameplay(minigame);
-        }, 200L); // 10 seconds
+        }, 200L);
     }
 
     @Override
     public void stop() {
-        // Cleanup if necessary
     }
 
     @Override
@@ -42,7 +41,6 @@ public class LobbyState implements GameState {
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving during lobby state
     }
 
     private void makeInvulnerable() {
@@ -73,7 +71,7 @@ public class LobbyState implements GameState {
                     Component.text("Spelare: " + Bukkit.getOnlinePlayers().size()),
                     Component.text("Spel: " + minigame.getName()),
                     Component.text(""),
-                    Component.text("enserver.se")
+                    Component.text("Event")
             );
         }
     }

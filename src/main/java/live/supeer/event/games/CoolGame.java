@@ -16,6 +16,8 @@ import java.util.List;
 
 public class CoolGame extends Minigame implements Listener {
 
+    // A template game for testing purposes
+
     public CoolGame(MinigameManager minigameManager) {
         super("CoolGame", Material.GOLD_INGOT, minigameManager);
     }
@@ -36,7 +38,6 @@ public class CoolGame extends Minigame implements Listener {
     @Override
     public void startGame() {
         registerListeners();
-        // Game logic here
         Bukkit.broadcastMessage("CoolGame has started!");
     }
 
@@ -49,7 +50,6 @@ public class CoolGame extends Minigame implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        // Implement game logic, e.g., check for block interaction
         if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.GOLD_BLOCK) {
             Player winner = event.getPlayer();
             Bukkit.broadcastMessage(winner.getName() + " has won the CoolGame!");

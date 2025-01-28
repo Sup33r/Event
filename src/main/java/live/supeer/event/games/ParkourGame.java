@@ -156,7 +156,7 @@ public class ParkourGame extends Minigame implements Listener {
                     Component.text(String.format("Borderhastighet: %.2f block/s", barrierSpeed * 20)),
                     Component.text("Distans från bordern: " + (int) borderDistance + " block"),
                     Component.text(""),
-                    Component.text("enserver.se")
+                    Component.text("Event")
             );
         }
     }
@@ -194,8 +194,8 @@ public class ParkourGame extends Minigame implements Listener {
                         String subtitle = Event.getMessage("messages.games.common.countdown.subtitle");
                         TextColor color;
                         TextColor subtitleColor = TextColor.color(0xD1CECF);
-                        Sound sound = Sound.BLOCK_NOTE_BLOCK_HAT; // Default sound for regular countdown steps
-                        float pitch = 1.0f; // Default pitch
+                        Sound sound = Sound.BLOCK_NOTE_BLOCK_HAT;
+                        float pitch = 1.0f;
 
                         switch (secondsLeft) {
                             case 5:
@@ -293,10 +293,10 @@ public class ParkourGame extends Minigame implements Listener {
                 currentLocation.setZ(currentLocation.getZ() + barrierSpeed);
                 barrierWall.teleport(currentLocation);
 
-                barrierSpeed += speedIncrement; // Increase speed
+                barrierSpeed += speedIncrement;
                 checkPlayerElimination();
             }
-        }.runTaskTimer(Event.getInstance(), 0L, 1L); // Run every tick
+        }.runTaskTimer(Event.getInstance(), 0L, 1L);
     }
 
     private void checkPlayerElimination() {
@@ -408,7 +408,6 @@ public class ParkourGame extends Minigame implements Listener {
 
             File schematicFile = schematicFiles.get(schematicIndex);
             schematicIndex++;
-            // Load the schematic as Clipboard
             Clipboard clipboard = schematicManager.loadSchematic(schematicFile);
             if (clipboard == null) {
                 Event.getInstance().getLogger().warning("Failed to load schematic: " + schematicFile.getName());
@@ -428,33 +427,26 @@ public class ParkourGame extends Minigame implements Listener {
                 continue;
             }
 
-            // Get the actual local origin from schematic
             var offset = clipboard.getMinimumPoint().subtract(clipboard.getOrigin());
 
-            // Transform position with offset
             BlockVector3 localPastePosition = pastePositions.getFirst().add(offset);
             BlockVector3 localCheckpointPosition = checkpointPositions.getFirst().add(offset);
 
-            // Subtract the minimum point of the clipboard to get the local position
             localPastePosition = localPastePosition.subtract(clipboard.getMinimumPoint());
             localCheckpointPosition = localCheckpointPosition.subtract(clipboard.getMinimumPoint());
 
             schematicManager.pasteSchematic(gameWorld, clipboard, pastePosition);
 
-            // Calculate the world coordinate of the checkpoint light block
             Location worldCheckpointPosition = pastePosition.clone().add(localCheckpointPosition.x(), localCheckpointPosition.y(), localCheckpointPosition.z());
 
-            // Save the worldCheckpointPosition as a checkpoint
             worldCheckpointPosition.setWorld(gameWorld);
             checkpointLocations.add(worldCheckpointPosition);
 
-            // Calculate the world coordinate of the next paste position
             pastePosition = pastePosition.clone().add(localPastePosition.x(), 0.0, localPastePosition.z());
 
             totalSchematics++;
         }
 
-        // Load the finish schematic
         File finishSchematicFile = schematicManager.getGameSchematic("parkourgame", "parkourfinish.schem");
         Clipboard finishClipboard = schematicManager.loadSchematic(finishSchematicFile);
         if (finishClipboard == null) {
@@ -468,21 +460,16 @@ public class ParkourGame extends Minigame implements Listener {
             return;
         }
 
-        // Get the actual local origin from finish schematic
         var finishOffset = finishClipboard.getMinimumPoint().subtract(finishClipboard.getOrigin());
 
-        // Transform position with offset
         BlockVector3 localFinishPosition = finishPositions.getFirst().add(finishOffset);
 
-        // Subtract the minimum point of the clipboard to get the local position
         localFinishPosition = localFinishPosition.subtract(finishClipboard.getMinimumPoint());
 
         schematicManager.pasteSchematic(gameWorld, finishClipboard, pastePosition);
 
-        // Calculate the world coordinate of the finish light block
         Location worldFinishPosition = pastePosition.clone().add(localFinishPosition.x(), localFinishPosition.y(), localFinishPosition.z());
 
-        // Save the worldFinishPosition as the finish line location
         worldFinishPosition.setWorld(gameWorld);
         checkpointLocations.add(worldFinishPosition);
     }

@@ -14,9 +14,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
 public class MapManager {
-    private final Path mapsDirectory = Paths.get("maps"); // Directory where maps are stored
+    private final Path mapsDirectory = Paths.get("maps");
 
-    // Load a map into the server
     public World loadMap(GameMap gameMap) {
         String mapName = gameMap.getWorldName();
         Path sourcePath = mapsDirectory.resolve(mapName);
@@ -28,25 +27,21 @@ public class MapManager {
         }
         deleteDirectory(targetPath.toFile());
 
-        // Copy map files
         try {
             copyDirectory(sourcePath, targetPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Delete uid.dat file to avoid duplicate world issues
         File uidFile = targetPath.resolve("uid.dat").toFile();
         if (uidFile.exists()) {
             uidFile.delete();
         }
 
-        // Create and load the world
         WorldCreator worldCreator = new WorldCreator(mapName);
         return Bukkit.createWorld(worldCreator);
     }
 
-    // Copy directory utility
     private void copyDirectory(Path source, Path target) throws IOException {
         Files.walk(source).forEach(s -> {
             try {
@@ -58,7 +53,6 @@ public class MapManager {
         });
     }
 
-    // Delete directory utility
     private void deleteDirectory(File directory) {
         if (directory.exists()) {
             File[] files = directory.listFiles();

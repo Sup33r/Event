@@ -121,7 +121,6 @@ public class MinigameManager {
         Map<Player, Integer> playerCoins = new HashMap<>();
         List<Map.Entry<Player, Integer>> sortedEntries = new ArrayList<>(playerScore.entrySet());
 
-        // Sort players by their scores in descending order
         sortedEntries.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
 
         int totalPlayers = sortedEntries.size();
@@ -136,7 +135,6 @@ public class MinigameManager {
             Player player = entry.getKey();
             int score = entry.getValue();
 
-            // Only increment rank if the score is different from the previous score
             if (score != previousScore) {
                 rank = i + 1;
                 previousScore = score;
@@ -150,7 +148,6 @@ public class MinigameManager {
 
         return playerCoins;
     }
-        // Additional methods for handling player events
     private void handleCollisions() {
         Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("event");
 

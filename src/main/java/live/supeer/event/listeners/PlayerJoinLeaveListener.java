@@ -27,7 +27,7 @@ public class PlayerJoinLeaveListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         handleEventPlayer(event.getPlayer());
         Event.playerBoards.put(event.getPlayer(), new FastBoard(event.getPlayer()));
-        Event.playerBoards.get(event.getPlayer()).updateTitle(Component.text("EnServer"));
+        Event.playerBoards.get(event.getPlayer()).updateTitle(Component.text("Event"));
         minigameManager.getCurrentState().handlePlayerJoin(event.getPlayer());
 
         minigameManager.teamAddPlayer(event.getPlayer());

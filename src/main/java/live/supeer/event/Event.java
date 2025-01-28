@@ -79,9 +79,7 @@ public final class Event extends JavaPlugin {
         String message = languageManager.getValue(key, "sv_se", replacements);
 
         if (message != null && !message.isEmpty()) {
-            // Deserialize MiniMessage to a Component
             Component component = languageManager.getMiniMessage().deserialize(message);
-            // Convert the Component to a legacy formatted string
             return LegacyComponentSerializer.legacySection().serialize(component);
         }
         return null;

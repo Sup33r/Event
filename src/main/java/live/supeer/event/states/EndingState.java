@@ -20,16 +20,14 @@ public class EndingState implements GameState {
         Bukkit.broadcastMessage("Game over! Returning to lobby...");
         teleportPlayersToLobby();
 
-        // Reset game and return to waiting state after a delay
         Bukkit.getScheduler().runTaskLater(Event.getInstance(), () -> {
             minigameManager.changeState(new WaitingState(minigameManager));
-        }, 100L); // Delay in ticks
+        }, 100L);
         updateScoreboard();
     }
 
     @Override
     public void stop() {
-        // Cleanup if necessary
     }
 
     @Override
@@ -41,7 +39,6 @@ public class EndingState implements GameState {
 
     @Override
     public void handlePlayerLeave(Player player) {
-        // Handle player leaving during ending state
         updateScoreboard();
     }
 
@@ -61,7 +58,7 @@ public class EndingState implements GameState {
                     Component.text("Spelare: " + Bukkit.getOnlinePlayers().size()),
                     Component.text("Status: Väntar"),
                     Component.text(""),
-                    Component.text("enserver.se")
+                    Component.text("Event")
             );
         }
     }
